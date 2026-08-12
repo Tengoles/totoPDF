@@ -21,7 +21,18 @@ body {
   color: var(--text);
 }
 
+/*
+ * Pure flex layout, top to bottom. No hardcoded heights and no hand-computed
+ * insets: the toolbar takes its natural height, the workspace takes the rest,
+ * and the rails are ordinary flex siblings of the page container.
+ */
+body {
+  display: flex;
+  flex-direction: column;
+}
+
 #toolbar {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -32,11 +43,14 @@ body {
 
 #workspace {
   display: flex;
-  height: calc(100% - 45px);
+  flex: 1 1 auto;
+  min-height: 0; /* without this the scroll container cannot shrink */
 }
 
+/* pdf.js needs a positioned, scrolling container. Relative is sufficient. */
 .pdf-container {
-  position: absolute;
-  inset: 45px 0 0 0;
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: auto;
 }
