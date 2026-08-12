@@ -5,7 +5,14 @@
     <title>totoPDF</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="toolbar"></div>
+    <div id="workspace">
+      <div id="thumbnail-rail"></div>
+      <div id="viewer-container" class="pdf-container">
+        <div id="viewer-inner" class="pdfViewer"></div>
+      </div>
+      <div id="annotation-rail"></div>
+    </div>
     <script type="module" src="/src/viewer/main.ts"></script>
   </body>
 </html>
