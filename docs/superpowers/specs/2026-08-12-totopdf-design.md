@@ -95,10 +95,14 @@ The toolbar always exposes an "Open in Chrome's viewer" escape hatch.
 
 ### 4.4 Annotation layer and tools
 
-pdf.js's `PDFViewer` is configured with `annotationEditorMode`. Our toolbar drives it through the event bus:
+pdf.js's `PDFViewer` is configured with `annotationEditorMode` and `annotationEditorHighlightColors`. Our toolbar drives it through the event bus. Values below are verified against `pdfjs-dist@6.2.108`:
 
-- `switchannotationeditormode` — `HIGHLIGHT` (9), `FREETEXT` (3), `NONE` (0)
-- `switchannotationeditorparams` — `HIGHLIGHT_COLOR`, `FREETEXT_COLOR`, `FREETEXT_SIZE`
+- `switchannotationeditormode` — `AnnotationEditorType.HIGHLIGHT` = 9, `FREETEXT` = 3, `NONE` = 0
+- `switchannotationeditorparams` — `HIGHLIGHT_COLOR` = 31, `FREETEXT_COLOR` = 12, `FREETEXT_SIZE` = 11, `FREETEXT_OPACITY` = 13
+
+`annotationEditorHighlightColors` takes a comma-separated `name=#RRGGBB` string and is the supported way to install our own palette rather than pdf.js's defaults.
+
+**Editing pre-existing annotations is supported.** In the core, `HighlightAnnotation` and `FreeTextAnnotation` both set `data.isEditable = !data.noHTML`, where `noHTML` is true only when the annotation is flagged Locked *and* ContentLocked. The annotation layer collects every such element and `_editOnDoubleClick()` promotes it into the editor layer. Highlights and text boxes authored in Acrobat or any other application are therefore editable, not merely rendered.
 
 **Highlight tool.** Activating it arms the currently selected palette color. Any text selection is highlighted on mouse release. Keys 1-5 swap color without leaving the page; Esc disarms and restores normal text selection. Clicking a highlight **created in totoPDF** opens a small floating palette offering recolor and delete. (Highlights that were already in the file when it was opened are a separate case — see §9.)
 
@@ -130,12 +134,15 @@ Controls:
 
 | Control | Setting | Effect |
 |---|---|---|
-| `maxCanvasPixels` | 2^23 (~8.4M px) instead of the 2^25 default | ~16× cut in worst-case canvas memory; CSS upscales, imperceptible on scanned pages |
-| Page buffer | 3–5 rendered pages instead of 10 | Re-rendering a scrolled-back page costs ~50 ms; retaining it costs tens of MB |
-| DPR clamp | Max 2; 1 for pages above a size threshold | Prevents 4× multiplication on HiDPI displays |
-| Canvas eviction | Set `canvas.width = 0` and `canvas.height = 0` explicitly | Chrome does not promptly reclaim canvas backing store on GC alone |
+| `maxCanvasPixels` | 2^22 (~4.19M px ≈ 16.8 MB/canvas) instead of the 2^25 default (~33.5M px ≈ 134 MB/canvas) | The single highest-leverage knob: an ~8× cut in worst-case canvas memory |
+| `maxCanvasDim` | Lower than the 32767 default | v6-only second cap, on any single dimension rather than total area |
+| DPR clamp | Max 2 | Prevents 4× multiplication on HiDPI displays |
 | Thumbnails | ~150 px wide, lazy, LRU-evicted, destroyed when the rail collapses | Keeps the left rail from becoming a second full renderer |
 | Document bytes | Transferred to the worker, not copied | Saves the full file size on large books |
+
+**Two things the page buffer does *not* give us.** `PDFViewer` holds rendered pages in a private `#buffer` sized `max(10, 2 × visible + 1)`. There is no public option to shrink it, so total canvas memory is governed by *per-canvas* caps rather than by buffer length: roughly `maxCanvasPixels × 4 bytes × 10`. At 2^22 that is ~168 MB, which fits the budget. Separately, pdf.js already sets `canvas.width = canvas.height = 0` when evicting, so explicit canvas release is not our responsibility.
+
+Zoom quality is preserved despite the low cap because v6 renders a separate **detail canvas** covering only the visible region at high zoom, rather than scaling the whole page canvas up.
 
 **Budget: steady state under ~400 MB on a 1000-page scanned book.** This is asserted by an automated test (§7), not assumed.
 
@@ -149,7 +156,8 @@ Every one of these needs defined, user-visible behavior. Silent failure is not a
 | No text layer (scanned) | Highlight tool disables itself and shows why. Text boxes remain available. No OCR. |
 | Rotated pages (`/Rotate`) | Annotation coordinates must respect page rotation. Committed fixture. |
 | Non-zero `/CropBox` origin | Annotation coordinates must respect the origin offset. Committed fixture. |
-| Pre-existing annotations | Guaranteed preserved and rendered. Editing them is best-effort pending empirical verification (§9). |
+| Pre-existing annotations | Preserved, rendered, **and editable** — see §4.4. Annotations flagged Locked + ContentLocked are correctly non-editable. |
+| Locked annotations | `isEditable` is false; render only, no edit affordance. Not an error — expected behavior. |
 | Corrupt or unparseable PDF | Error state in the viewer with the parser's reason. |
 | File-URL permission not granted | Actionable guidance pointing at the `chrome://extensions` toggle. |
 | Stored handle permission revoked | Re-prompt for permission on save. |
@@ -228,10 +236,11 @@ These are answered by experiment in the first stages, not by assumption. Each ha
 | Risk | Resolution | Fallback |
 |---|---|---|
 | `declarativeNetRequest` may not reliably intercept `file://` URLs | Verify in stage 2, first hour | `webNavigation.onBeforeNavigate` + `tabs.update` |
-| Scope of pdf.js support for editing **pre-existing** annotations is unclear (upstream issue closed via PRs #16535 / #16523, but no public injection API) | Verify in stage 3 against the pre-annotated fixture | v1 guarantees preservation and rendering only; editing existing annotations moves to v1.1 |
-| The annotation rail depends on pdf.js internals that are not stable public API | Isolate all internal access inside `annotation-index.ts` and `annotation-bridge.ts` | Version-pin `pdfjs-dist`; upgrades become a deliberate, tested change |
+| The annotation rail depends on pdf.js internals that are not stable public API | Isolate all internal access inside `annotation-index.ts` and `annotation-bridge.ts` | Version-pin `pdfjs-dist@6.2.108`; upgrades become a deliberate, tested change |
 | `saveDocument()` behavior on encrypted documents | Verify in stage 4 | Detect encryption on open and refuse to save (already the v1 design) |
-| Canvas memory on scanned pages may exceed budget even with caps | Memory test in stage 5 | Tile large pages, or lower `maxCanvasPixels` further |
+| Canvas memory on scanned pages may exceed budget even with caps | Memory test in stage 5 | Lower `maxCanvasPixels` and `maxCanvasDim` further; the detail-canvas mechanism protects zoom quality |
+
+**Resolved during planning.** Editing pre-existing annotations was listed as a risk; inspection of `pdfjs-dist@6.2.108` confirms first-class support (§4.4), so it is a v1 feature rather than a deferred one.
 
 ## 10. Implementation sequencing
 
