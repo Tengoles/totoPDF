@@ -17,7 +17,8 @@ describe('manifest', () => {
   });
 
   it('exposes the viewer and the pdf.js worker as web accessible resources', () => {
-    const { resources } = manifest.web_accessible_resources[0];
+    // Indexed access is optional under noUncheckedIndexedAccess.
+    const resources = manifest.web_accessible_resources[0]?.resources ?? [];
     expect(resources).toContain('viewer.html');
     expect(resources).toContain('pdf.worker.mjs');
   });
