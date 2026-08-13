@@ -9,6 +9,7 @@ export interface RailItem {
 }
 
 const MAX_EXCERPT = 80;
+const FALLBACK_COLOR = '#000000';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -18,8 +19,12 @@ function isEditorMap(value: unknown): value is Map<string, unknown> {
   return value instanceof Map;
 }
 
+function isUnknownArray(value: unknown): value is readonly unknown[] {
+  return Array.isArray(value);
+}
+
 function isNumberArray(value: unknown): value is number[] {
-  return Array.isArray(value) && value.every((item) => typeof item === 'number');
+  return isUnknownArray(value) && value.every((item) => typeof item === 'number');
 }
 
 function readNumber(record: Record<string, unknown>, key: string): number | undefined {
@@ -32,19 +37,38 @@ function readString(record: Record<string, unknown>, key: string): string | unde
   return typeof value === 'string' ? value : undefined;
 }
 
-function readColor(record: Record<string, unknown>): string {
-  const value = record.color;
-  if (!isNumberArray(value) || value.length < 3) {
-    return '#000000';
+/**
+ * The two sources disagree about how a colour is carried: a serialized editor
+ * uses a plain number array, while `getAnnotations()` returns a
+ * Uint8ClampedArray, for which Array.isArray is false. Both are read here so
+ * neither source silently falls back to black.
+ */
+function toChannels(value: unknown): number[] | null {
+  if (value instanceof Uint8ClampedArray || value instanceof Uint8Array) {
+    return Array.from(value);
   }
-  return `#${value
-    .slice(0, 3)
-    .map((channel) => channel.toString(16).padStart(2, '0'))
-    .join('')}`;
+  return isNumberArray(value) ? value : null;
+}
+
+function hexChannel(channel: number): string {
+  return Math.min(255, Math.max(0, Math.round(channel))).toString(16).padStart(2, '0');
+}
+
+function formatColor(channels: number[] | null): string {
+  if (!channels || channels.length < 3) {
+    return FALLBACK_COLOR;
+  }
+  return `#${channels.slice(0, 3).map(hexChannel).join('')}`;
 }
 
 function truncate(text: string): string {
   return text.length > MAX_EXCERPT ? `${text.slice(0, MAX_EXCERPT - 1)}…` : text;
+}
+
+function byPageNumber(items: RailItem[]): RailItem[] {
+  // Array.prototype.sort is stable, so items on one page keep the order they
+  // were merged in: the document's own annotations before this session's.
+  return items.sort((a, b) => a.pageNumber - b.pageNumber);
 }
 
 function kindOf(annotationType: number | undefined): RailItem['kind'] | null {
@@ -66,10 +90,7 @@ function kindOf(annotationType: number | undefined): RailItem['kind'] | null {
  * (quadPoints/outlines), so a highlight's excerpt is always empty; the rail
  * falls back to showing the item's kind when the excerpt is blank.
  */
-function toRailItem(id: string, raw: unknown): RailItem | null {
-  if (!isRecord(raw)) {
-    return null;
-  }
+function toRailItem(id: string, raw: Record<string, unknown>): RailItem | null {
   const kind = kindOf(readNumber(raw, 'annotationType'));
   if (!kind) {
     return null;
@@ -78,9 +99,21 @@ function toRailItem(id: string, raw: unknown): RailItem | null {
     id,
     pageNumber: (readNumber(raw, 'pageIndex') ?? 0) + 1,
     kind,
-    color: readColor(raw),
+    color: formatColor(toChannels(raw.color)),
     excerpt: truncate(readString(raw, 'value') ?? ''),
   };
+}
+
+export interface EditorEntries {
+  items: RailItem[];
+  /**
+   * Ids of annotations already in the file that this session has taken over,
+   * whether by editing or deleting them. Both cases carry the annotation's own
+   * id (`11R`, an object reference) in the entry's `id` field, which is the
+   * only thing tying an editor entry to the `getAnnotations()` entry it
+   * supersedes -- the storage key is always `pdfjs_internal_editor_N`.
+   */
+  claimedIds: Set<string>;
 }
 
 /**
@@ -89,18 +122,120 @@ function toRailItem(id: string, raw: unknown): RailItem | null {
  * or `null` when nothing has been annotated yet. That wrapper -- not a bare
  * Map -- is what main.ts actually has in hand; see serializeAnnotationState
  * in src/viewer/main.ts, which unwraps the identical shape for the journal.
+ *
+ * A deletion produces an entry with no `annotationType` (see
+ * AnnotationEditor.serializeDeleted), so it yields no item while still
+ * claiming its id -- which is exactly what removes it from the rail.
  */
-export function buildRailItems(serializable: unknown): RailItem[] {
+export function buildEditorEntries(serializable: unknown): EditorEntries {
+  const items: RailItem[] = [];
+  const claimedIds = new Set<string>();
   if (!isRecord(serializable) || !isEditorMap(serializable.map)) {
-    return [];
+    return { items, claimedIds };
   }
 
-  const items: RailItem[] = [];
-  for (const [id, raw] of serializable.map) {
-    const item = toRailItem(id, raw);
+  for (const [key, raw] of serializable.map) {
+    if (!isRecord(raw)) {
+      continue;
+    }
+    const annotationId = readString(raw, 'id');
+    if (annotationId) {
+      claimedIds.add(annotationId);
+    }
+    const item = toRailItem(annotationId ?? key, raw);
     if (item) {
       items.push(item);
     }
   }
-  return items.sort((a, b) => a.pageNumber - b.pageNumber);
+  return { items, claimedIds };
+}
+
+/** The editor-storage half on its own, unchanged since Task 15. */
+export function buildRailItems(serializable: unknown): RailItem[] {
+  return byPageNumber(buildEditorEntries(serializable).items);
+}
+
+function persistedKind(subtype: string | undefined): RailItem['kind'] | null {
+  if (subtype === 'Highlight') {
+    return 'highlight';
+  }
+  if (subtype === 'FreeText') {
+    return 'textbox';
+  }
+  return null;
+}
+
+/** A text box keeps its colour in the default appearance; `color` is null. */
+function persistedColor(raw: Record<string, unknown>): string {
+  const direct = toChannels(raw.color);
+  if (direct) {
+    return formatColor(direct);
+  }
+  const appearance = raw.defaultAppearanceData;
+  return formatColor(isRecord(appearance) ? toChannels(appearance.fontColor) : null);
+}
+
+/**
+ * A persisted highlight carries the words it covers in `overlaidText`, which
+ * the editor serialization never has -- so a reopened document's rail is more
+ * readable than the one the annotations were made in. A text box carries its
+ * words in `contentsObj.str`.
+ */
+function persistedExcerpt(raw: Record<string, unknown>): string {
+  const overlaid = readString(raw, 'overlaidText');
+  if (overlaid) {
+    return truncate(overlaid);
+  }
+  const contents = raw.contentsObj;
+  return truncate((isRecord(contents) ? readString(contents, 'str') : undefined) ?? '');
+}
+
+/**
+ * Maps one page's `pdfPage.getAnnotations()` result. Its fields are not the
+ * editor serialization above: the kind is a `subtype` string, the id is a PDF
+ * object reference, and there is no page index -- the page is only knowable
+ * from which page was asked. Captured from a live pdfjs-dist@6.2.108 session;
+ * the dump is in .superpowers/sdd/task-21-report.md.
+ *
+ * An entry with no id is dropped: it could not be de-duplicated against an
+ * editor entry, so listing it would risk showing the same annotation twice.
+ */
+export function buildPersistedRailItems(pageNumber: number, annotations: unknown): RailItem[] {
+  if (!isUnknownArray(annotations)) {
+    return [];
+  }
+  const items: RailItem[] = [];
+  for (const raw of annotations) {
+    if (!isRecord(raw)) {
+      continue;
+    }
+    const kind = persistedKind(readString(raw, 'subtype'));
+    const id = readString(raw, 'id');
+    if (!kind || !id) {
+      continue;
+    }
+    items.push({ id, pageNumber, kind, color: persistedColor(raw), excerpt: persistedExcerpt(raw) });
+  }
+  return items;
+}
+
+/**
+ * The rail's real contents: what is saved in the file, plus what this session
+ * has added, with anything in both listed once. The editor entry wins, because
+ * it is the version on screen -- a recoloured highlight should show its new
+ * colour, and a deleted one should not be listed at all.
+ *
+ * Its excerpt is the exception. An editor entry for a highlight has no text
+ * field at all, so letting it win outright turned "p.1 A fixed point of a
+ * function..." back into "p.1 highlight" the moment the user recoloured it.
+ * The words come from the saved annotation, which recolouring does not change.
+ */
+export function mergeRailItems(persisted: readonly RailItem[], serializable: unknown): RailItem[] {
+  const { items, claimedIds } = buildEditorEntries(serializable);
+  const savedById = new Map(persisted.map((item) => [item.id, item]));
+  const edited = items.map((item) =>
+    item.excerpt ? item : { ...item, excerpt: savedById.get(item.id)?.excerpt ?? '' },
+  );
+  const unclaimed = persisted.filter((item) => !claimedIds.has(item.id));
+  return byPageNumber([...unclaimed, ...edited]);
 }
