@@ -95,10 +95,14 @@ The toolbar always exposes an "Open in Chrome's viewer" escape hatch.
 
 ### 4.4 Annotation layer and tools
 
-pdf.js's `PDFViewer` is configured with `annotationEditorMode` and `annotationEditorHighlightColors`. Our toolbar drives it through the event bus. Values below are verified against `pdfjs-dist@6.2.108`:
+pdf.js's `PDFViewer` is configured with `annotationEditorMode` and `annotationEditorHighlightColors`. Our toolbar drives it through **two different mechanisms**, because the component bundle we ship (`web/pdf_viewer.mjs`) is not the full pdf.js viewer application:
 
-- `switchannotationeditormode` — `AnnotationEditorType.HIGHLIGHT` = 9, `FREETEXT` = 3, `NONE` = 0
-- `switchannotationeditorparams` — `HIGHLIGHT_COLOR` = 31, `FREETEXT_COLOR` = 12, `FREETEXT_SIZE` = 11, `FREETEXT_OPACITY` = 13
+- **Tool mode — a property setter, not an event.** `viewer.annotationEditorMode = { mode }`. Nothing in the component bundle listens for `switchannotationeditormode`; pdf.js *emits* that event outbound to notify a host application, and the inbound handler lives in `web/app.js`, which totoPDF does not use. Dispatching it does nothing at all. Modes: `HIGHLIGHT` = 9, `FREETEXT` = 3, `NONE` = 0.
+- **Tool parameters — the event bus.** `eventBus.dispatch('switchannotationeditorparams', { source, type, value })`. `AnnotationEditorUIManager` does subscribe to this one. Types: `HIGHLIGHT_COLOR` = 31, `FREETEXT_COLOR` = 12, `FREETEXT_SIZE` = 11, `FREETEXT_OPACITY` = 13.
+
+Two constraints follow from the setter's implementation: it throws unless the editor was enabled at construction (pass `annotationEditorMode: 0`, not `-1`), and it silently no-ops until a document is loaded — so the armed mode must be re-applied after opening a document.
+
+All values verified against `pdfjs-dist@6.2.108`.
 
 `annotationEditorHighlightColors` takes a comma-separated `name=#RRGGBB` string and is the supported way to install our own palette rather than pdf.js's defaults.
 
