@@ -64,3 +64,25 @@ body {
   inset: 0;
   overflow: auto;
 }
+
+#toolbar button {
+  background: #32363d;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: var(--space-1) var(--space-3);
+  font: inherit;
+  cursor: pointer;
+}
+
+#toolbar button[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: #7fb0ff;
+}
+
+#toolbar .swatch {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 4px;
+}
