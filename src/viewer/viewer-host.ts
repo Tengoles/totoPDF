@@ -5,6 +5,7 @@ import { EventBus, PDFLinkService, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.m
 // which this stylesheet defines. Without it every page computes to zero width and
 // no canvas is ever rasterized -- the viewer looks blank with no error.
 import 'pdfjs-dist/web/pdf_viewer.css';
+import type { PageController, PageState } from '../ui/page-nav';
 import { DEFAULT_SCALE_VALUE, type ZoomController, type ZoomState } from '../ui/zoom';
 import { MAX_CANVAS_DIM, MAX_CANVAS_PIXELS } from './canvas-budget';
 
@@ -15,6 +16,7 @@ export interface ViewerHost {
   viewer: PDFViewer;
   linkService: PDFLinkService;
   zoom: ZoomController;
+  pages: PageController;
   open(bytes: Uint8Array): Promise<PDFDocumentProxy>;
   releasePreviousDocument(): Promise<void>;
 }
@@ -133,6 +135,58 @@ function createZoom(
   };
 }
 
+/**
+ * pagechanging carries the position and fires on every scroll across a page
+ * boundary. The other two carry the count: pagesCount is 0 until pdf.js has
+ * built the page views, and pagesinit is dispatched the moment it has (see
+ * PDFViewer.setDocument), whereas pagesloaded waits for every page in the file
+ * to be fetched -- a long wait in a 1000-page book, and far too late for the
+ * toolbar to be able to say "of 1000". Both are listened to: pagesinit is what
+ * makes the total appear promptly, pagesloaded is the documented "pages are
+ * ready" event and costs one redundant read.
+ */
+const PAGE_EVENTS = ['pagechanging', 'pagesinit', 'pagesloaded'] as const;
+
+/**
+ * The page position is pdf.js's throughout, exactly as the scale is: nothing
+ * here counts pages or remembers which one is current. Every entry point is a
+ * no-op until a document is loaded (currentPageNumber's setter returns early
+ * with no pdfDocument), which is what makes the controls safe to render before
+ * one is.
+ */
+function createPages(viewer: PDFViewer, eventBus: EventBus): PageController {
+  const state = (): PageState => ({
+    pageNumber: viewer.currentPageNumber,
+    pageCount: viewer.pagesCount,
+  });
+
+  return {
+    state,
+    goTo(pageNumber) {
+      // Throws on a non-integer, which is why parsePageInput rejects decimals
+      // rather than rounding them.
+      viewer.currentPageNumber = pageNumber;
+    },
+    subscribe(listener, signal) {
+      if (signal.aborted) {
+        return;
+      }
+      // EventBus has no signal support of its own, so the abort is what calls
+      // off(). Without it a rebuilt toolbar's box and a destroyed thumbnail
+      // rail would both keep being driven by the previous document's events.
+      const forward = (): void => listener(state());
+      for (const name of PAGE_EVENTS) {
+        eventBus.on(name, forward);
+      }
+      signal.addEventListener('abort', () => {
+        for (const name of PAGE_EVENTS) {
+          eventBus.off(name, forward);
+        }
+      });
+    },
+  };
+}
+
 /** Scales whose resolved value depends on the container's size, so they have to be recomputed when it changes. */
 const CONTAINER_RELATIVE_SCALES = new Set(['auto', 'page-width', 'page-fit']);
 
@@ -214,6 +268,7 @@ export function createViewerHost(
     viewer,
     linkService,
     zoom: createZoom(viewer, container, eventBus),
+    pages: createPages(viewer, eventBus),
     open,
     // Terminates the workers of every document opened before the current one.
     // A no-op when there is nothing to release.

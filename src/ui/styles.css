@@ -35,7 +35,15 @@ body {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  /*
+   * Condensed from --space-2 when the page box was added. Measured at 1280px:
+   * the bar needed 1300px with the page box and 8px gaps, and a flex row that
+   * cannot fit does not scroll -- it squeezes its items until their labels
+   * wrap, which turned the toolbar into two lines. At 4px the whole row fits
+   * on one line with about 52px to spare, or 39px on a document whose page
+   * count runs to four digits.
+   */
+  gap: var(--space-1);
   padding: var(--space-2) var(--space-3);
   background: var(--bg-raised);
   border-bottom: 1px solid var(--border);
@@ -122,6 +130,36 @@ body {
   padding: var(--space-1);
   font: inherit;
   font-size: 12px;
+}
+
+/* The page box and the total beside it, read as one control. "of 20" is two
+   words and would otherwise be the first thing in the toolbar to wrap. */
+.page-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* Same specificity as the input[type='number'] rule above and declared after
+   it, so this width wins. 44px of content box takes four digits without
+   clipping, which covers a book longer than any this viewer is likely to see
+   opened. */
+#toolbar input.page-input {
+  width: 44px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  /* The spinner arrows cost width the toolbar does not have to spare, and
+     stepping with them would change the box without committing anything. */
+  appearance: textfield;
+}
+
+#toolbar input.page-input::-webkit-inner-spin-button,
+#toolbar input.page-input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
 }
 
 /* The wrapper is the popover's positioning context and the boundary an
@@ -285,6 +323,17 @@ body {
   display: block;
   width: 100%;
   height: auto;
+}
+
+/* The page being read. Outline plus a brighter, heavier page number, so it is
+   not signalled by colour alone; the aria-current="page" that comes with it
+   carries the same fact to a screen reader. The outline is drawn inside the
+   thumbnail's own box so the rail's overflow cannot clip it. */
+.thumb[aria-current='page'] {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  color: var(--text);
+  font-weight: 700;
 }
 
 body.thumbs-collapsed #thumbnail-rail,

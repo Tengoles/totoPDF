@@ -13,6 +13,7 @@ import { openHandleStore } from '../core/file-handles';
 import { openJournal } from '../core/recovery-journal';
 import { loadSettings, paletteToHighlightColors, type Settings } from '../core/settings';
 import { clearBanners, showBanner, showLoading } from '../ui/errors';
+import type { PageController } from '../ui/page-nav';
 import { renderToolbar } from '../ui/toolbar';
 import type { ZoomController } from '../ui/zoom';
 import { createAnnotationRailWiring } from './annotation-rail-wiring';
@@ -124,6 +125,7 @@ function renderChrome(
   controller: DocumentController,
   wiring: SettingsWiring,
   zoom: ZoomController,
+  pages: PageController,
 ): void {
   const capabilities = controller.capabilities();
   // A window of open PDFs is only tellable apart by the tab, so the tab carries
@@ -136,6 +138,7 @@ function renderChrome(
     freeTextSize: settings.freeTextSize,
     bridge,
     zoom,
+    pages,
     canHighlight: capabilities.canHighlight,
     canSave: capabilities.canSave,
     saveStatus: controller.saveStatus,
@@ -248,7 +251,7 @@ async function start(
   // right now", so all three are rebuilt together: at startup with nothing
   // open, and after every open.
   const renderChromeNow = (): void => {
-    renderChrome(toolbarRoot, settings, bridge, controller, wiring, host.zoom);
+    renderChrome(toolbarRoot, settings, bridge, controller, wiring, host.zoom, host.pages);
     presentThumbnails(controller.currentPdf());
     refreshAnnotationRail();
   };

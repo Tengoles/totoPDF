@@ -1,5 +1,7 @@
 import type { AnnotationBridge, ToolMode } from '../core/annotation-bridge';
 import type { PaletteEntry } from '../core/settings';
+import type { PageController } from './page-nav';
+import { createPageNavControls } from './page-nav-control';
 import { createPaletteMenu } from './palette';
 import { createSaveStatusReadout, type SaveStatusSource } from './save-status';
 import { createTextBoxControls, type TextBoxControlOptions } from './textbox-controls';
@@ -17,6 +19,8 @@ export interface ToolbarOptions extends TextBoxControlOptions {
   activeColorIndex: number;
   /** The viewer's scale. Owned by the viewer host, not by the toolbar. */
   zoom: ZoomController;
+  /** Which page is shown, and how many there are. Also owned by the host. */
+  pages: PageController;
   canHighlight: boolean;
   canSave: boolean;
   /** Drives the readout next to Save. Survives this toolbar being rebuilt. */
@@ -249,6 +253,9 @@ export function renderToolbar(root: HTMLElement, options: ToolbarOptions): void 
 
   root.append(
     rails.pages,
+    // Next to the button that shows the thumbnails, which is where every other
+    // PDF viewer puts the page box.
+    createPageNavControls(options.pages, signal),
     highlight,
     ...highlightControls.elements,
     textbox,
