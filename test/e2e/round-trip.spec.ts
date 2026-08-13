@@ -1,11 +1,10 @@
-import { mkdtemp, readFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
-import { type BrowserContext, type Page, chromium, expect, test } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { type BrowserContext, type Page, expect, test } from '@playwright/test';
 import { PDFDict, PDFDocument, PDFName, PDFString } from 'pdf-lib';
 import { PRE_ANNOTATED_MARKER } from '../fixtures/constants';
+import { launchExtension } from './extension-context';
 
-const EXTENSION_PATH = resolve('dist');
 const TEXT_FIXTURE = resolve('test/fixtures/text.pdf');
 const PRE_ANNOTATED_FIXTURE = resolve('test/fixtures/pre-annotated.pdf');
 
@@ -22,13 +21,7 @@ let context: BrowserContext;
 let extensionId: string;
 
 test.beforeAll(async () => {
-  const userDataDir = await mkdtemp(join(tmpdir(), 'totopdf-e2e-'));
-  context = await chromium.launchPersistentContext(userDataDir, {
-    channel: 'chromium',
-    args: [`--disable-extensions-except=${EXTENSION_PATH}`, `--load-extension=${EXTENSION_PATH}`],
-  });
-  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
-  extensionId = new URL(worker.url()).host;
+  ({ context, extensionId } = await launchExtension('totopdf-e2e-'));
 });
 
 test.afterAll(async () => {

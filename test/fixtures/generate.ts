@@ -74,11 +74,34 @@ async function generateNoText(): Promise<void> {
   await writeFile(resolve(import.meta.dirname, 'no-text.pdf'), bytes);
 }
 
+/**
+ * A 1000-page document for Task 18's memory budget test: large enough that
+ * pdf.js's page buffer and canvas caps are the only thing keeping scrolled
+ * canvas memory under the 400 MB budget, rather than the document simply
+ * being too small to matter.
+ */
+async function generateLarge(): Promise<void> {
+  const doc = await PDFDocument.create();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  for (let index = 0; index < 1000; index += 1) {
+    const page = doc.addPage([612, 792]);
+    page.drawText(`Page ${index + 1}. Fixed point iteration converges here.`, {
+      x: 60,
+      y: 700,
+      size: 14,
+      font,
+    });
+  }
+  const bytes = await doc.save();
+  await writeFile(resolve(import.meta.dirname, 'large.pdf'), bytes);
+}
+
 async function main(): Promise<void> {
   await generateText();
   await generatePreAnnotated();
   await generateRotated();
   await generateNoText();
+  await generateLarge();
 }
 
 void main();
