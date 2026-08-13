@@ -19,9 +19,9 @@ content rather than something only totoPDF understands.
     that tab is open;
   - a file dragged onto an already-open totoPDF tab.
 - Highlight tool with a 5-colour palette; keys 1-5 switch colour while the
-  tool is armed. The "Colours" button opens a palette editor where any of the
-  five swatches can be set to any colour through the browser's own colour
-  picker. The palette, and which swatch is armed, are remembered across
+  tool is armed. Clicking a swatch uses that colour; right-clicking one opens
+  the browser's own colour picker for it, so any of the five can be set to
+  any colour. The palette, and which swatch is armed, are remembered across
   sessions; recolouring the armed swatch applies to the next highlight with
   no extra click.
 - Text box tool with a text colour and a font size (6 to 96) set from the
@@ -191,7 +191,10 @@ filing a bug that turns out to be one of these.
 
 - **What has, and has not, actually been checked in a browser.**
   Highlighting, saving, the annotation rail, the thumbnail rail, canvas
-  memory usage on a 1000-page document, palette recolouring, the text
+  memory usage on a 1000-page document, palette recolouring through a
+  swatch's right-click picker (including that it survives a reload and
+  colours the next highlight), the three-group toolbar layout measured at
+  1280px and 2000px, the text
   box colour and size controls, and the zoom controls -- buttons, preset
   menu, Ctrl+wheel, the keyboard shortcuts, the limits greying the step
   buttons out, and the tab title following the open file -- were all driven

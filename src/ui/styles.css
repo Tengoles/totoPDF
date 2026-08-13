@@ -40,7 +40,9 @@ body {
    * the bar needed 1300px with the page box and 8px gaps, and a flex row that
    * cannot fit does not scroll -- it squeezes its items until their labels
    * wrap, which turned the toolbar into two lines. At 4px the whole row fits
-   * on one line with about 52px to spare, or 39px on a document whose page
+   * on one line with room to spare. Re-measured at 1280px after the "Colours"
+   * button came out and the two spacers went in, which is where that spare
+   * width now sits: 62px in each spacer, or 53px on a document whose page
    * count runs to four digits.
    */
   gap: var(--space-1);
@@ -162,64 +164,32 @@ body {
   margin: 0;
 }
 
-/* The wrapper is the popover's positioning context and the boundary an
-   outside click is measured against. */
-.palette-menu {
+/* A swatch and the colour picker its right click opens, as one toolbar item.
+   The slot is the picker's positioning context. */
+.swatch-slot {
   position: relative;
   display: inline-flex;
 }
 
-.palette-popover {
+/* Invisible, unhittable and untabbable: it exists so the right click has a
+   real picker to open, over the swatch it recolours. Not display:none --
+   Chrome will not open a chooser for an element with no layout box. */
+#toolbar .swatch-slot input.swatch-color {
   position: absolute;
-  top: calc(100% + var(--space-2));
-  left: 0;
-  z-index: 20;
-  min-width: 232px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
-/* display:flex above would otherwise defeat the hidden attribute. */
-.palette-popover[hidden] {
-  display: none;
-}
-
-.palette-popover h2 {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--text-dim);
-  margin: 0;
-}
-
-.palette-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.palette-name {
-  flex: 1 1 auto;
-}
-
-.palette-armed {
-  color: var(--text-dim);
-  font-size: 11px;
-}
-
-.palette-note {
-  margin: 0;
-  font-size: 11px;
-  line-height: 1.4;
-  color: var(--text-dim);
+/* A disabled button swallows the pointer events over it, and the right click
+   has to reach the slot underneath: recolouring is a setting, so it stays
+   available on a document that cannot be highlighted. */
+#toolbar .swatch:disabled {
+  pointer-events: none;
 }
 
 /* Minus, readout and plus read as one control rather than three buttons. */

@@ -1,34 +1,27 @@
 import type { AnnotationBridge, ToolMode } from '../core/annotation-bridge';
-import type { PaletteEntry } from '../core/settings';
 import type { PageController } from './page-nav';
 import { createPageNavControls } from './page-nav-control';
-import { createPaletteMenu } from './palette';
+import { createHighlightControls, type HighlightControlOptions } from './palette';
 import { createSaveStatusReadout, type SaveStatusSource } from './save-status';
 import { createTextBoxControls, type TextBoxControlOptions } from './textbox-controls';
 import { applyZoomAction, type ZoomController, zoomKeyAction } from './zoom';
 import { createZoomControls } from './zoom-control';
 
-/** bridge, freeTextColor, freeTextSize and the two text callbacks come from the base. */
-export interface ToolbarOptions extends TextBoxControlOptions {
-  /**
-   * The live palette array -- the same instance the bridge holds. A recolour
-   * reaches it through onPaletteRecolor and lands in place, so the swatches and
-   * the popover can both read the current colour straight back out of it.
-   */
-  palette: PaletteEntry[];
-  activeColorIndex: number;
+/**
+ * bridge, freeTextColor, freeTextSize and the two text callbacks come from
+ * TextBoxControlOptions; the palette, the armed index, canHighlight and their
+ * two callbacks come from HighlightControlOptions.
+ */
+export interface ToolbarOptions extends TextBoxControlOptions, HighlightControlOptions {
   /** The viewer's scale. Owned by the viewer host, not by the toolbar. */
   zoom: ZoomController;
   /** Which page is shown, and how many there are. Also owned by the host. */
   pages: PageController;
-  canHighlight: boolean;
   canSave: boolean;
   /** Drives the readout next to Save. Survives this toolbar being rebuilt. */
   saveStatus: SaveStatusSource;
   onSave(): void;
   onOpenInChrome(): void;
-  onPaletteRecolor(index: number, hex: string): void;
-  onActiveColorChange(index: number): void;
 }
 
 function button(label: string, title: string): HTMLButtonElement {
@@ -39,87 +32,23 @@ function button(label: string, title: string): HTMLButtonElement {
   return element;
 }
 
-/** Pushes everything after it to the right-hand end of the toolbar. */
+/**
+ * Empty, and the only thing in the row that grows. Two of them split the bar
+ * into three groups and hold the middle one centred in whatever space the
+ * outer two leave; the group boundaries are where these sit.
+ */
 function spacer(): HTMLSpanElement {
   const element = document.createElement('span');
   element.style.flex = '1';
   return element;
 }
 
-function createSwatches(
-  palette: readonly PaletteEntry[],
-  canHighlight: boolean,
-  onPick: (index: number) => void,
-): HTMLButtonElement[] {
-  return palette.map((entry, index) => {
-    const swatch = document.createElement('button');
-    swatch.type = 'button';
-    swatch.className = 'swatch';
-    swatch.style.background = entry.hex;
-    // A swatch's accessible name comes from its title -- it has no text. Keep
-    // the word "highlight" out of it: the e2e specs locate the Highlight button
-    // by accessible name, and Playwright matches names by substring.
-    swatch.title = `${entry.name} (key ${index + 1}). Marks selected text in this colour.`;
-    swatch.disabled = !canHighlight;
-    swatch.addEventListener('click', () => onPick(index));
-    return swatch;
-  });
+interface RailToggles {
+  pages: HTMLButtonElement;
+  notes: HTMLButtonElement;
 }
 
-interface HighlightControls {
-  elements: HTMLElement[];
-  /** Re-reads the armed colour from the bridge, which keys 1-5 change directly. */
-  syncArmed(): void;
-}
-
-function createHighlightControls(
-  options: ToolbarOptions,
-  syncPressedState: () => void,
-): HighlightControls {
-  const { palette, bridge, canHighlight, onActiveColorChange, onPaletteRecolor } = options;
-  let activeIndex = options.activeColorIndex;
-
-  const swatches = createSwatches(palette, canHighlight, (index) => {
-    bridge.setHighlightColorIndex(index);
-    bridge.setMode('highlight');
-    setActive(index);
-    syncPressedState();
-  });
-
-  function setActive(index: number): void {
-    const changed = index !== activeIndex;
-    activeIndex = index;
-    swatches.forEach((swatch, at) => swatch.setAttribute('aria-current', String(at === index)));
-    if (changed) {
-      onActiveColorChange(index);
-    }
-  }
-
-  const menu = createPaletteMenu({
-    palette,
-    getActiveIndex: () => activeIndex,
-    onRecolor: (index, hex) => {
-      onPaletteRecolor(index, hex);
-      // Read the colour back out of the live palette rather than trusting the
-      // input: onPaletteRecolor rejects anything that is not #RRGGBB, and the
-      // swatch must show what was actually stored.
-      const stored = palette[index];
-      const swatch = swatches[index];
-      if (stored && swatch) {
-        swatch.style.background = stored.hex;
-      }
-      if (index === activeIndex) {
-        // Re-arm so the next highlight uses the new colour without a second click.
-        bridge.setHighlightColorIndex(index);
-      }
-    },
-  });
-
-  setActive(activeIndex);
-  return { elements: [...swatches, menu], syncArmed: () => setActive(bridge.getColorIndex()) };
-}
-
-function createRailToggles(): { pages: HTMLButtonElement; notes: HTMLButtonElement } {
+function createRailToggles(): RailToggles {
   const pages = button('Pages', 'Show or hide the page thumbnail rail.');
   const notes = button('Notes', 'Show or hide the annotation rail.');
   pages.addEventListener('click', () => document.body.classList.toggle('thumbs-collapsed'));
@@ -133,9 +62,10 @@ function createRailToggles(): { pages: HTMLButtonElement; notes: HTMLButtonEleme
 // root.replaceChildren(), so every open stacked another listener forever.
 // One module-level controller, aborted and replaced each run, keeps exactly
 // one live listener no matter how many times renderToolbar is called. Every
-// listener that outlives the toolbar's own elements -- the keyboard, the
-// popovers' dismiss handlers, the scale subscription, Ctrl+wheel on the
-// scroll container -- takes this signal for the same reason.
+// listener that outlives the toolbar's own elements -- the keyboard, the zoom
+// popover's dismiss handlers, the scale subscription, Ctrl+wheel on the
+// scroll container -- takes this signal for the same reason, and so do the
+// swatch strip's, which are element-owned but cost nothing to tie to it.
 let toolbarAbort: AbortController | null = null;
 
 function resetToolbarListeners(): AbortSignal {
@@ -215,60 +145,87 @@ function createToolButtons(canHighlight: boolean, canSave: boolean): ToolButtons
   return { highlight, textbox, save, openInChrome };
 }
 
-export function renderToolbar(root: HTMLElement, options: ToolbarOptions): void {
-  const { bridge, zoom, onSave, onOpenInChrome } = options;
-  root.replaceChildren();
-  const signal = resetToolbarListeners();
-
-  const { highlight, textbox, save, openInChrome } = createToolButtons(
-    options.canHighlight,
-    options.canSave,
-  );
-  const rails = createRailToggles();
-
-  function syncPressedState(): void {
-    const mode: ToolMode = bridge.getMode();
-    highlight.setAttribute('aria-pressed', String(mode === 'highlight'));
-    textbox.setAttribute('aria-pressed', String(mode === 'textbox'));
-  }
-
-  // Swatches only arm the highlight tool, so they follow its availability. The
-  // palette editor and the text-box controls are settings, not document
-  // actions, and stay usable on a document that cannot be highlighted.
-  const highlightControls = createHighlightControls(options, syncPressedState);
+function bindToolButtons(
+  tools: ToolButtons,
+  options: ToolbarOptions,
+  syncPressedState: () => void,
+): void {
+  const { bridge } = options;
 
   function toggle(mode: ToolMode): void {
     bridge.setMode(bridge.getMode() === mode ? 'none' : mode);
     syncPressedState();
   }
 
-  highlight.addEventListener('click', () => toggle('highlight'));
-  textbox.addEventListener('click', () => toggle('textbox'));
-  save.addEventListener('click', onSave);
-  openInChrome.addEventListener('click', onOpenInChrome);
+  tools.highlight.addEventListener('click', () => toggle('highlight'));
+  tools.textbox.addEventListener('click', () => toggle('textbox'));
+  tools.save.addEventListener('click', options.onSave);
+  tools.openInChrome.addEventListener('click', options.onOpenInChrome);
+}
 
-  // The wheel listener sits on the scroll container rather than on anything
-  // the toolbar owns, but it is the same control and dies with the same signal.
-  zoom.bindWheel(signal);
+interface ToolbarParts {
+  tools: ToolButtons;
+  rails: RailToggles;
+  /** The swatch strip, already built and wired. */
+  swatches: HTMLElement[];
+  signal: AbortSignal;
+}
 
+/**
+ * Three groups, separated by the two growing spacers: where you are in the
+ * document on the left, what you are marking it up with in the middle, how you
+ * are viewing and keeping it on the right. There used to be one spacer, which
+ * put every group but the last hard against the left edge and left the whole
+ * surplus in a single gap before the zoom controls.
+ */
+function layoutToolbar(root: HTMLElement, options: ToolbarOptions, parts: ToolbarParts): void {
+  const { tools, rails, swatches, signal } = parts;
   root.append(
     rails.pages,
     // Next to the button that shows the thumbnails, which is where every other
     // PDF viewer puts the page box.
     createPageNavControls(options.pages, signal),
-    highlight,
-    ...highlightControls.elements,
-    textbox,
+    spacer(),
+    tools.highlight,
+    ...swatches,
+    tools.textbox,
     ...createTextBoxControls(options),
     spacer(),
-    createZoomControls(zoom, signal),
+    createZoomControls(options.zoom, signal),
     rails.notes,
-    openInChrome,
+    tools.openInChrome,
     // Next to the button it is about, and on the same abort signal as every
     // other listener that outlives this toolbar's elements.
     createSaveStatusReadout(options.saveStatus, signal),
-    save,
+    tools.save,
   );
+}
+
+export function renderToolbar(root: HTMLElement, options: ToolbarOptions): void {
+  const { bridge, zoom, onSave } = options;
+  root.replaceChildren();
+  const signal = resetToolbarListeners();
+
+  const tools = createToolButtons(options.canHighlight, options.canSave);
+  const rails = createRailToggles();
+
+  function syncPressedState(): void {
+    const mode: ToolMode = bridge.getMode();
+    tools.highlight.setAttribute('aria-pressed', String(mode === 'highlight'));
+    tools.textbox.setAttribute('aria-pressed', String(mode === 'textbox'));
+  }
+
+  // Swatches only arm the highlight tool, so they follow its availability.
+  // Recolouring one and the text-box controls are settings, not document
+  // actions, and stay usable on a document that cannot be highlighted.
+  const highlightControls = createHighlightControls(options, signal, syncPressedState);
+  bindToolButtons(tools, options, syncPressedState);
+
+  // The wheel listener sits on the scroll container rather than on anything
+  // the toolbar owns, but it is the same control and dies with the same signal.
+  zoom.bindWheel(signal);
+
+  layoutToolbar(root, options, { tools, rails, swatches: highlightControls.elements, signal });
   syncPressedState();
 
   bindKeyboard(signal, {
