@@ -80,6 +80,15 @@ export function renderToolbar(root: HTMLElement, options: ToolbarOptions): void 
   const textbox = button('Text box', 'Drag a box on the page and type inside it.');
   const save = button('Save', 'Write annotations into the PDF file (Ctrl+S).');
   const openInChrome = button('Open in Chrome', "Open this file in Chrome's built-in PDF viewer.");
+  const toggleThumbs = button('Pages', 'Show or hide the page thumbnail rail.');
+  const toggleNotes = button('Notes', 'Show or hide the annotation rail.');
+
+  toggleThumbs.addEventListener('click', () => {
+    document.body.classList.toggle('thumbs-collapsed');
+  });
+  toggleNotes.addEventListener('click', () => {
+    document.body.classList.toggle('notes-collapsed');
+  });
 
   highlight.disabled = !canHighlight;
   save.disabled = !canSave;
@@ -106,7 +115,7 @@ export function renderToolbar(root: HTMLElement, options: ToolbarOptions): void 
   const spacer = document.createElement('span');
   spacer.style.flex = '1';
 
-  root.append(highlight, ...swatches, textbox, spacer, openInChrome, save);
+  root.append(toggleThumbs, highlight, ...swatches, textbox, spacer, toggleNotes, openInChrome, save);
   syncPressedState();
 
   bindKeyboard(bridge, onSave, syncPressedState);

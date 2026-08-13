@@ -18,6 +18,7 @@ import { showBanner, showLoading } from '../ui/errors';
 import { renderToolbar } from '../ui/toolbar';
 import { createDocumentController, type DocumentController } from './document-controller';
 import { createEditorHost } from './editor-host';
+import { createThumbnailWiring } from './thumbnail-wiring';
 import { createViewerHost, type ViewerHost } from './viewer-host';
 
 /**
@@ -188,8 +189,15 @@ async function main(): Promise<void> {
   const handles = await openHandleStore();
   const journal = await openJournal();
   const controller = createDocumentController(host, bridge, handles, journal);
+  const presentThumbnails = createThumbnailWiring(host);
 
-  const renderChromeNow = (): void => renderChrome(toolbarRoot, settings, bridge, controller);
+  // Thumbnails are rebuilt in lockstep with the toolbar: both reflect
+  // "what document is open right now", and both must be re-run every time
+  // that changes -- at startup with nothing open, and after every open.
+  const renderChromeNow = (): void => {
+    renderChrome(toolbarRoot, settings, bridge, controller);
+    presentThumbnails(controller.currentPdf());
+  };
   renderChromeNow();
 
   setupDragAndDrop(controller, renderChromeNow);
