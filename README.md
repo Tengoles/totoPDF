@@ -89,21 +89,12 @@ filing a bug that turns out to be one of these.
   "Open in totoPDF" menu item, or click the extension's toolbar icon, to
   open it in totoPDF instead.
 
-- **Whether `file://` interception actually works has not been verified in
-  a real browser.** The redirect rule (`declarativeNetRequest`) meant to
-  catch a local PDF navigation and hand it to totoPDF automatically has
-  never been exercised against a real local PDF in an actual browser
-  session -- only unit-tested against the rule-building function in
-  isolation. It is possible Chrome does not apply `declarativeNetRequest`
-  redirect rules to `file://` navigations at all, in which case automatic
-  interception silently does nothing and every local PDF needs the manual
-  "Open in totoPDF" action every time. `src/background/interception.ts`
-  exports `installNavigationFallback`, a `webNavigation`-based fallback for
-  exactly this case, but it is deliberately not wired into
-  `src/background/index.ts` -- turning it on without knowing whether it is
-  actually needed risks a double redirect. If local PDFs are not opening in
-  totoPDF automatically after the file-URL permission is on, this is the
-  first thing to check.
+- **`file://` interception is verified working.** Navigating to a local PDF
+  redirects into totoPDF automatically, confirmed by hand in a real Chrome
+  session on 2026-08-13. `src/background/interception.ts` also exports
+  `installNavigationFallback`, an alternative `webNavigation` implementation
+  kept unused in case the redirect rule stops applying to `file://` on a
+  future Chrome release.
 
 - **A local path containing `&` or `#` is never auto-intercepted, and this
   is deliberate.** The redirect rule builds the destination URL with a
@@ -135,27 +126,34 @@ filing a bug that turns out to be one of these.
   configurable from the toolbar; the font itself is not -- pdf.js's
   FreeText editor does not expose a font-family option.
 
-- **The cross-reader check has not been done.** See the table below. It
-  needs a person with Acrobat, Preview, and Firefox installed to actually
-  open a saved file in each and look.
+- **The cross-reader check is partly done.** A saved file opens correctly in
+  Microsoft Edge, confirmed by hand. Edge renders PDFs with PDFium, the same
+  engine Chrome uses, so it is not fully independent evidence -- Firefox
+  (pdf.js) and Acrobat (its own implementation) are still unchecked. The
+  annotations do carry `/AP` appearance streams, verified against the saved
+  bytes by pdf-lib, which is the technical precondition for any reader to
+  render them without synthesising its own appearance.
 
 - **What has, and has not, actually been checked in a browser.**
   Highlighting, saving, the annotation rail, the thumbnail rail, and canvas
   memory usage on a 1000-page document were all driven and observed in a
   real Chromium session during development, via Playwright. The native OS
-  save-file picker, drag-and-drop from a real desktop file manager,
-  `file://` interception, and every PDF reader other than the Chromium
-  instance the tests run in have not been -- see the two `file://` items
-  above and the table below.
+  save-file picker, drag-and-drop from a real desktop file manager, and
+  `file://` interception have since been exercised by hand in Chrome and all
+  work. Firefox and Acrobat remain unchecked -- see the table below.
 
 ## Cross-reader checklist
 
-Not yet done. Needs a person: open a PDF in totoPDF, add one highlight and
-one text box, save, then open that same file in each reader below and
-record what actually happened.
+Partly done. To finish it: open a PDF in totoPDF, add one highlight and one
+text box, save, then open that same file in each reader below.
 
 | Reader | Highlight renders | Text box renders |
 |---|---|---|
-| Chrome native viewer | | |
-| Firefox | | |
-| Acrobat or Preview | | |
+| Chrome native viewer | yes | yes |
+| Microsoft Edge | yes | yes |
+| Firefox | not checked | not checked |
+| Acrobat or Preview | not checked | not checked |
+
+Chrome and Edge both render with PDFium, so they are one data point rather
+than two. Firefox uses pdf.js and Acrobat its own implementation; those are
+the checks that would prove portability.
