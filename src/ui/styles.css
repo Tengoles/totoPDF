@@ -184,6 +184,69 @@ body {
   color: var(--text-dim);
 }
 
+/* Minus, readout and plus read as one control rather than three buttons. */
+.zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+#toolbar .zoom-step {
+  /* A fixed width keeps the group from resizing as the readout changes. */
+  width: 26px;
+  padding: var(--space-1) 0;
+  text-align: center;
+}
+
+#toolbar button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.zoom-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+#toolbar .zoom-readout {
+  /* Wide enough for "Actual size" so the toolbar does not shift on a change. */
+  min-width: 88px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.zoom-popover {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 20;
+  min-width: 132px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+/* display:flex above would otherwise defeat the hidden attribute. */
+.zoom-popover[hidden] {
+  display: none;
+}
+
+#toolbar .zoom-popover button {
+  text-align: left;
+  border-color: transparent;
+  background: none;
+}
+
+#toolbar .zoom-popover button:hover {
+  background: #32363d;
+  border-color: var(--border);
+}
+
 #thumbnail-rail {
   flex: 0 0 100px;
   border-right: 1px solid var(--border);

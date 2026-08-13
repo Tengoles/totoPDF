@@ -26,6 +26,15 @@ content rather than something only totoPDF understands.
   no extra click.
 - Text box tool with a text colour and a font size (6 to 96) set from the
   toolbar, also remembered across sessions.
+- Zoom, from the toolbar or the keyboard. A document opens fitted to the
+  window width. The minus and plus buttons step pdf.js's own zoom ladder and
+  grey out at its 10% and 2500% limits; the percentage between them opens a
+  list of 50 to 200 percent plus Fit width, Fit page and Actual size.
+  Ctrl and plus or minus do the same thing, Ctrl+0 goes back to fitting the
+  width, and Ctrl held while scrolling over the page zooms the document
+  rather than the browser window.
+- The tab title is the open file's name, so several PDFs open at once can be
+  told apart from the tab strip.
 - Saves back through the File System Access API. The first save on a
   document prompts for a file location; the chosen handle is remembered in
   IndexedDB so later saves on the same document do not prompt again.
@@ -156,9 +165,11 @@ filing a bug that turns out to be one of these.
 
 - **What has, and has not, actually been checked in a browser.**
   Highlighting, saving, the annotation rail, the thumbnail rail, canvas
-  memory usage on a 1000-page document, palette recolouring, and the text
-  box colour and size controls were all driven and observed in a real
-  Chromium session during development, via Playwright. The native OS
+  memory usage on a 1000-page document, palette recolouring, the text
+  box colour and size controls, and the zoom controls -- buttons, preset
+  menu, Ctrl+wheel, the keyboard shortcuts, the limits greying the step
+  buttons out, and the tab title following the open file -- were all driven
+  and observed in a real Chromium session during development, via Playwright. The native OS
   save-file picker, drag-and-drop from a real desktop file manager, and
   `file://` interception have since been exercised by hand in Chrome and all
   work. Firefox and Acrobat remain unchecked -- see the table below.

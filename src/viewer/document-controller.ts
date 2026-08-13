@@ -38,6 +38,8 @@ export interface DocumentController {
   present(loaded: LoadedDocument): Promise<void>;
   save(): Promise<SaveOutcome>;
   currentOrigin(): DocumentOrigin | null;
+  /** The open document's file name, for the tab title. Null when none is open. */
+  currentFileName(): string | null;
   currentPdf(): PDFDocumentProxy | null;
   isDirty(): boolean;
   capabilities(): Capabilities;
@@ -215,6 +217,7 @@ export function createDocumentController(
     present: (loaded) => performPresent(state, { host, bridge, tracker }, loaded),
     save: () => performSave(state, handles, tracker),
     currentOrigin: () => state.open?.loaded.origin ?? null,
+    currentFileName: () => state.open?.loaded.fileName ?? null,
     currentPdf: () => state.open?.pdf ?? null,
     isDirty: () => tracker.isDirty(),
     // Derived rather than stored, so an open in flight cannot leave a stale

@@ -1,12 +1,12 @@
 import type { AnnotationBridge, ToolMode } from '../core/annotation-bridge';
 import type { PaletteEntry } from '../core/settings';
 import { createPaletteMenu } from './palette';
+import { createTextBoxControls, type TextBoxControlOptions } from './textbox-controls';
+import { applyZoomAction, type ZoomController, zoomKeyAction } from './zoom';
+import { createZoomControls } from './zoom-control';
 
-/** pdf.js accepts any positive size; these are the bounds the number input offers. */
-const MIN_TEXT_SIZE = 6;
-const MAX_TEXT_SIZE = 96;
-
-export interface ToolbarOptions {
+/** bridge, freeTextColor, freeTextSize and the two text callbacks come from the base. */
+export interface ToolbarOptions extends TextBoxControlOptions {
   /**
    * The live palette array -- the same instance the bridge holds. A recolour
    * reaches it through onPaletteRecolor and lands in place, so the swatches and
@@ -14,17 +14,14 @@ export interface ToolbarOptions {
    */
   palette: PaletteEntry[];
   activeColorIndex: number;
-  freeTextColor: string;
-  freeTextSize: number;
-  bridge: AnnotationBridge;
+  /** The viewer's scale. Owned by the viewer host, not by the toolbar. */
+  zoom: ZoomController;
   canHighlight: boolean;
   canSave: boolean;
   onSave(): void;
   onOpenInChrome(): void;
   onPaletteRecolor(index: number, hex: string): void;
   onActiveColorChange(index: number): void;
-  onTextColorChange(hex: string): void;
-  onTextSizeChange(size: number): void;
 }
 
 function button(label: string, title: string): HTMLButtonElement {
@@ -40,16 +37,6 @@ function spacer(): HTMLSpanElement {
   const element = document.createElement('span');
   element.style.flex = '1';
   return element;
-}
-
-/** A visible caption next to the control, so neither input is a bare box. */
-function labeled(caption: string, control: HTMLElement): HTMLLabelElement {
-  const label = document.createElement('label');
-  label.className = 'field';
-  const text = document.createElement('span');
-  text.textContent = caption;
-  label.append(text, control);
-  return label;
 }
 
 function createSwatches(
@@ -125,39 +112,6 @@ function createHighlightControls(
   return { elements: [...swatches, menu], syncArmed: () => setActive(bridge.getColorIndex()) };
 }
 
-function createTextBoxControls(options: ToolbarOptions): HTMLElement[] {
-  const { bridge, onTextColorChange, onTextSizeChange } = options;
-
-  const color = document.createElement('input');
-  color.type = 'color';
-  color.value = options.freeTextColor;
-  color.title = 'Colour of the text in a text box.';
-  color.addEventListener('input', () => {
-    bridge.setFreeTextColor(color.value);
-    onTextColorChange(color.value);
-  });
-
-  const size = document.createElement('input');
-  size.type = 'number';
-  size.min = String(MIN_TEXT_SIZE);
-  size.max = String(MAX_TEXT_SIZE);
-  size.step = '1';
-  size.value = String(options.freeTextSize);
-  size.title = `Font size of text in a text box, ${MIN_TEXT_SIZE} to ${MAX_TEXT_SIZE}.`;
-  size.addEventListener('input', () => {
-    const value = Number(size.value);
-    // A half-typed or out-of-range entry is ignored rather than clamped:
-    // clamping while typing rewrites "1" to "6" before "14" can be finished.
-    if (!Number.isInteger(value) || value < MIN_TEXT_SIZE || value > MAX_TEXT_SIZE) {
-      return;
-    }
-    bridge.setFreeTextSize(value);
-    onTextSizeChange(value);
-  });
-
-  return [labeled('Text colour', color), labeled('Text size', size)];
-}
-
 function createRailToggles(): { pages: HTMLButtonElement; notes: HTMLButtonElement } {
   const pages = button('Pages', 'Show or hide the page thumbnail rail.');
   const notes = button('Notes', 'Show or hide the annotation rail.');
@@ -171,13 +125,27 @@ function createRailToggles(): { pages: HTMLButtonElement; notes: HTMLButtonEleme
 // 'keydown' listener to window with no way to remove it -- window outlives
 // root.replaceChildren(), so every open stacked another listener forever.
 // One module-level controller, aborted and replaced each run, keeps exactly
-// one live listener no matter how many times renderToolbar is called.
-let keyboardAbort: AbortController | null = null;
+// one live listener no matter how many times renderToolbar is called. Every
+// listener that outlives the toolbar's own elements -- the keyboard, the
+// popovers' dismiss handlers, the scale subscription, Ctrl+wheel on the
+// scroll container -- takes this signal for the same reason.
+let toolbarAbort: AbortController | null = null;
+
+function resetToolbarListeners(): AbortSignal {
+  toolbarAbort?.abort();
+  toolbarAbort = new AbortController();
+  return toolbarAbort.signal;
+}
+
+interface KeyboardDeps {
+  bridge: AnnotationBridge;
+  zoom: ZoomController;
+  onSave(): void;
+  onHandled(): void;
+}
 
 /** Ctrl+S saves globally; otherwise unarmed keys fall through to the bridge (Escape, 1-5). */
-function bindKeyboard(bridge: AnnotationBridge, onSave: () => void, onHandled: () => void): void {
-  keyboardAbort?.abort();
-  keyboardAbort = new AbortController();
+function bindKeyboard(signal: AbortSignal, deps: KeyboardDeps): void {
   window.addEventListener(
     'keydown',
     (event) => {
@@ -188,21 +156,29 @@ function bindKeyboard(bridge: AnnotationBridge, onSave: () => void, onHandled: (
         // save and another file picker on top of the one already running.
         event.preventDefault();
         if (!event.repeat) {
-          onSave();
+          deps.onSave();
         }
         return;
       }
       // Typing in the toolbar's own text-size box must not double as the 1-5
-      // colour shortcut, and the same goes for any future field.
+      // colour shortcut, and Ctrl+- inside a text box being typed into is the
+      // editor's business, not the viewer's.
       if (event.target instanceof HTMLElement && isTextEntry(event.target)) {
         return;
       }
-      if (bridge.handleKey(event)) {
+      const zoomAction = zoomKeyAction(event);
+      if (zoomAction) {
+        // Without this Chrome zooms the whole page instead of the document.
         event.preventDefault();
-        onHandled();
+        applyZoomAction(deps.zoom, zoomAction);
+        return;
+      }
+      if (deps.bridge.handleKey(event)) {
+        event.preventDefault();
+        deps.onHandled();
       }
     },
-    { signal: keyboardAbort.signal },
+    { signal },
   );
 }
 
@@ -233,8 +209,9 @@ function createToolButtons(canHighlight: boolean, canSave: boolean): ToolButtons
 }
 
 export function renderToolbar(root: HTMLElement, options: ToolbarOptions): void {
-  const { bridge, onSave, onOpenInChrome } = options;
+  const { bridge, zoom, onSave, onOpenInChrome } = options;
   root.replaceChildren();
+  const signal = resetToolbarListeners();
 
   const { highlight, textbox, save, openInChrome } = createToolButtons(
     options.canHighlight,
@@ -263,6 +240,10 @@ export function renderToolbar(root: HTMLElement, options: ToolbarOptions): void 
   save.addEventListener('click', onSave);
   openInChrome.addEventListener('click', onOpenInChrome);
 
+  // The wheel listener sits on the scroll container rather than on anything
+  // the toolbar owns, but it is the same control and dies with the same signal.
+  zoom.bindWheel(signal);
+
   root.append(
     rails.pages,
     highlight,
@@ -270,14 +251,20 @@ export function renderToolbar(root: HTMLElement, options: ToolbarOptions): void 
     textbox,
     ...createTextBoxControls(options),
     spacer(),
+    createZoomControls(zoom, signal),
     rails.notes,
     openInChrome,
     save,
   );
   syncPressedState();
 
-  bindKeyboard(bridge, onSave, () => {
-    syncPressedState();
-    highlightControls.syncArmed();
+  bindKeyboard(signal, {
+    bridge,
+    zoom,
+    onSave,
+    onHandled: () => {
+      syncPressedState();
+      highlightControls.syncArmed();
+    },
   });
 }

@@ -1,4 +1,5 @@
 import type { PaletteEntry } from '../core/settings';
+import { bindPopoverDismiss } from './popover';
 
 export interface PaletteEditorOptions {
   palette: readonly PaletteEntry[];
@@ -114,45 +115,8 @@ export function createPaletteMenu(options: PaletteMenuOptions): HTMLElement {
   }
 
   trigger.addEventListener('click', () => setOpen(popover.hidden));
-  bindDismiss({ wrapper, popover, trigger, close: () => setOpen(false), signal });
+  bindPopoverDismiss({ wrapper, popover, trigger, close: () => setOpen(false), signal });
 
   wrapper.append(trigger, popover);
   return wrapper;
-}
-
-interface DismissTargets {
-  wrapper: HTMLElement;
-  popover: HTMLElement;
-  trigger: HTMLElement;
-  close(): void;
-  signal: AbortSignal;
-}
-
-/** Escape and a click anywhere outside the menu both shut it. */
-function bindDismiss({ wrapper, popover, trigger, close, signal }: DismissTargets): void {
-  document.addEventListener(
-    'keydown',
-    (event) => {
-      if (event.key !== 'Escape' || popover.hidden) {
-        return;
-      }
-      // document precedes window in the bubble path, so stopping here is what
-      // keeps this Escape from also disarming the highlight tool. Escape with
-      // the popover shut still reaches the bridge untouched.
-      event.stopPropagation();
-      close();
-      trigger.focus();
-    },
-    { signal },
-  );
-
-  document.addEventListener(
-    'pointerdown',
-    (event) => {
-      if (!popover.hidden && event.target instanceof Node && !wrapper.contains(event.target)) {
-        close();
-      }
-    },
-    { signal },
-  );
 }

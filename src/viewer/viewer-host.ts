@@ -5,6 +5,7 @@ import { EventBus, PDFLinkService, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.m
 // which this stylesheet defines. Without it every page computes to zero width and
 // no canvas is ever rasterized -- the viewer looks blank with no error.
 import 'pdfjs-dist/web/pdf_viewer.css';
+import { DEFAULT_SCALE_VALUE, type ZoomController, type ZoomState } from '../ui/zoom';
 import { MAX_CANVAS_DIM, MAX_CANVAS_PIXELS } from './canvas-budget';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('pdf.worker.mjs');
@@ -13,6 +14,7 @@ export interface ViewerHost {
   eventBus: EventBus;
   viewer: PDFViewer;
   linkService: PDFLinkService;
+  zoom: ZoomController;
   open(bytes: Uint8Array): Promise<PDFDocumentProxy>;
   releasePreviousDocument(): Promise<void>;
 }
@@ -69,6 +71,68 @@ async function loadDocument(
   }
 }
 
+/**
+ * Zoom is pdf.js's throughout: increaseScale/decreaseScale walk its own ladder
+ * and currentScaleValue takes its own fit-mode names, so nothing here computes
+ * a scale or remembers one. Every entry point is a no-op until a document is
+ * loaded, which is what makes the controls safe to render before one is.
+ */
+function createZoom(
+  viewer: PDFViewer,
+  container: HTMLDivElement,
+  eventBus: EventBus,
+): ZoomController {
+  // currentScaleValue is empty until the first document, and the opening fit is
+  // what will then apply, so that is what the readout should say meanwhile.
+  const state = (): ZoomState => ({
+    scaleValue: viewer.currentScaleValue || DEFAULT_SCALE_VALUE,
+    scale: viewer.currentScale,
+  });
+
+  return {
+    state,
+    zoomIn: () => viewer.increaseScale(),
+    zoomOut: () => viewer.decreaseScale(),
+    apply: (scaleValue) => {
+      viewer.currentScaleValue = scaleValue;
+    },
+    reset: () => {
+      viewer.currentScaleValue = DEFAULT_SCALE_VALUE;
+    },
+    subscribe(listener, signal) {
+      if (signal.aborted) {
+        return;
+      }
+      // EventBus has no signal support of its own, so the abort is what calls
+      // off(). Without it the previous toolbar's readout would keep updating.
+      const forward = (): void => listener(state());
+      eventBus.on('scalechanging', forward);
+      signal.addEventListener('abort', () => eventBus.off('scalechanging', forward));
+    },
+    bindWheel(signal) {
+      container.addEventListener(
+        'wheel',
+        (event) => {
+          if (!event.ctrlKey) {
+            return;
+          }
+          // Chrome's default for Ctrl+wheel is to zoom the whole page --
+          // toolbar, rails and all -- while the document's own scale stays put.
+          // preventDefault is what stops that, and it only works because the
+          // listener below is registered with passive: false.
+          event.preventDefault();
+          if (event.deltaY < 0) {
+            viewer.increaseScale();
+          } else if (event.deltaY > 0) {
+            viewer.decreaseScale();
+          }
+        },
+        { passive: false, signal },
+      );
+    },
+  };
+}
+
 export function createViewerHost(
   container: HTMLDivElement,
   viewerDiv: HTMLDivElement,
@@ -89,8 +153,9 @@ export function createViewerHost(
   });
   linkService.setViewer(viewer);
 
+  // The opening fit. Also what Ctrl+0 and the "Fit width" preset go back to.
   eventBus.on('pagesinit', () => {
-    viewer.currentScaleValue = 'page-width';
+    viewer.currentScaleValue = DEFAULT_SCALE_VALUE;
   });
 
   const tasks = createTaskPool();
@@ -107,6 +172,7 @@ export function createViewerHost(
     eventBus,
     viewer,
     linkService,
+    zoom: createZoom(viewer, container, eventBus),
     open,
     // Terminates the workers of every document opened before the current one.
     // A no-op when there is nothing to release.

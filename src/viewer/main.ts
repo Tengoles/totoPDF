@@ -14,6 +14,7 @@ import { openJournal } from '../core/recovery-journal';
 import { loadSettings, paletteToHighlightColors, type Settings } from '../core/settings';
 import { clearBanners, showBanner, showLoading } from '../ui/errors';
 import { renderToolbar } from '../ui/toolbar';
+import type { ZoomController } from '../ui/zoom';
 import { createAnnotationRailWiring } from './annotation-rail-wiring';
 import { createDocumentController, type DocumentController } from './document-controller';
 import { setupE2eHooks } from './e2e-hooks';
@@ -23,6 +24,9 @@ import { createThumbnailWiring } from './thumbnail-wiring';
 import { createViewerHost } from './viewer-host';
 
 const SAVE_CONFIRMATION_MS = 5000;
+
+/** The tab title with nothing open. */
+const APP_TITLE = 'totoPDF';
 
 const UNSAVED_SWITCH_WARNING =
   'This document has unsaved annotations, and opening another document discards them. ' +
@@ -142,14 +146,19 @@ function renderChrome(
   bridge: AnnotationBridge,
   controller: DocumentController,
   wiring: SettingsWiring,
+  zoom: ZoomController,
 ): void {
   const capabilities = controller.capabilities();
+  // A window of open PDFs is only tellable apart by the tab, so the tab carries
+  // the file name. Derived, not stored: nothing has to remember to clear it.
+  document.title = controller.currentFileName() ?? APP_TITLE;
   renderToolbar(toolbarRoot, {
     palette: settings.palette,
     activeColorIndex: settings.activeColorIndex,
     freeTextColor: settings.freeTextColor,
     freeTextSize: settings.freeTextSize,
     bridge,
+    zoom,
     canHighlight: capabilities.canHighlight,
     canSave: capabilities.canSave,
     onSave: () => handleSave(controller),
@@ -256,7 +265,7 @@ async function start(
   // right now", so all three are rebuilt together: at startup with nothing
   // open, and after every open.
   const renderChromeNow = (): void => {
-    renderChrome(toolbarRoot, settings, bridge, controller, wiring);
+    renderChrome(toolbarRoot, settings, bridge, controller, wiring, host.zoom);
     presentThumbnails(controller.currentPdf());
     refreshAnnotationRail();
   };
