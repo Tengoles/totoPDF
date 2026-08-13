@@ -1,6 +1,7 @@
 import '../ui/styles.css';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { createAnnotationBridge, type AnnotationBridge } from '../core/annotation-bridge';
+import { buildRailItems } from '../core/annotation-index';
 import { createEditorHost } from './editor-host';
 import {
   type DocumentOrigin,
@@ -14,6 +15,7 @@ import { writeBytes } from '../core/file-writer';
 import { createDebouncedRecorder, type Journal, openJournal } from '../core/recovery-journal';
 import { buildSavedBytes } from '../core/save-pipeline';
 import { loadSettings, paletteToHighlightColors } from '../core/settings';
+import { renderAnnotationRail } from '../ui/annotation-rail';
 import { renderToolbar } from '../ui/toolbar';
 import { createViewerHost, type ViewerHost } from './viewer-host';
 
@@ -170,6 +172,34 @@ function openInChrome(origin: DocumentOrigin | null): void {
   });
 }
 
+/**
+ * Refreshes the right-hand annotation rail whenever an editor's state
+ * changes, so a highlight or text box appears in the list as soon as it is
+ * created without waiting for a save. The brief and the journal tracker both
+ * reference an "annotationeditorstateschanged" event, but that name is
+ * dispatched nowhere in pdfjs-dist@6.2.108 (confirmed empirically -- see
+ * task-15-report.md); the real event carrying this signal is
+ * "editingstateschanged". This is its own subscription, independent of the
+ * journal tracker's (deliberately left untouched, event-name mismatch and
+ * all -- fixing it is outside this task).
+ */
+function setupAnnotationRail(host: ViewerHost, controller: DocumentController): void {
+  const root = document.querySelector<HTMLElement>('#annotation-rail');
+  if (!root) {
+    return;
+  }
+
+  const refresh = (): void => {
+    const storage = controller.currentPdf()?.annotationStorage.serializable ?? null;
+    renderAnnotationRail(root, buildRailItems(storage), (item) => {
+      host.viewer.currentPageNumber = item.pageNumber;
+    });
+  };
+
+  host.eventBus.on('editingstateschanged', refresh);
+  refresh();
+}
+
 // Drag-and-drop is the third document source.
 function setupDragAndDrop(controller: DocumentController): void {
   document.addEventListener('dragover', (event) => event.preventDefault());
@@ -239,6 +269,7 @@ async function main(): Promise<void> {
   setupDragAndDrop(controller);
   setupE2eHooks(host, controller);
   setupUnloadGuard(controller);
+  setupAnnotationRail(host, controller);
 
   const origin = parseViewerQuery(location.search);
   if (origin) {
