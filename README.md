@@ -24,6 +24,17 @@ To open local PDFs automatically, open totoPDF's entry on that page and enable
     npm test          # unit and integration
     npm run typecheck
 
+End-to-end tests load the real built extension into Chromium and verify a
+saved file with pdf-lib, an implementation independent of the pdf.js this
+project renders with. They need a build and generated fixtures first:
+
+    npm run build
+    npx vite-node test/fixtures/generate.ts
+    npm run test:e2e
+
+`test/fixtures/*.pdf` are generated, not committed; regenerate them with the
+command above whenever you need them.
+
 ## Deploy
 
 Not published. Loaded unpacked from `dist/`.
