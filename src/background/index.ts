@@ -1,3 +1,11 @@
+import { installContextMenu } from './context-menu';
+import { installInterception } from './interception';
+
 chrome.runtime.onInstalled.addListener(() => {
-  console.info('totoPDF installed');
+  void installInterception();
+  installContextMenu();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  void installInterception();
 });

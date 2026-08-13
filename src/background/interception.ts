@@ -1,0 +1,52 @@
+export const FILE_PDF_RULE_ID = 1;
+
+/**
+ * declarativeNetRequest cannot percent-encode a captured group, so the raw
+ * file URL is substituted verbatim. Paths containing '#' or '&' therefore fall
+ * back to the manual "Open in totoPDF" action, which uses viewerUrlFor.
+ */
+export function buildFilePdfRule(viewerUrl: string): chrome.declarativeNetRequest.Rule {
+  return {
+    id: FILE_PDF_RULE_ID,
+    priority: 1,
+    action: {
+      type: 'redirect' as chrome.declarativeNetRequest.RuleActionType,
+      redirect: { regexSubstitution: `${viewerUrl}?src=\\1` },
+    },
+    condition: {
+      regexFilter: '^(file:///.*\\.pdf)$',
+      isUrlFilterCaseSensitive: false,
+      resourceTypes: ['main_frame' as chrome.declarativeNetRequest.ResourceType],
+    },
+  };
+}
+
+export function viewerUrlFor(pdfUrl: string, viewerBase: string): string {
+  return `${viewerBase}?src=${encodeURIComponent(pdfUrl)}`;
+}
+
+export async function installInterception(): Promise<void> {
+  const viewerUrl = chrome.runtime.getURL('viewer.html');
+  await chrome.declarativeNetRequest.updateDynamicRules({
+    removeRuleIds: [FILE_PDF_RULE_ID],
+    addRules: [buildFilePdfRule(viewerUrl)],
+  });
+}
+
+/**
+ * Fallback for Chrome builds where declarativeNetRequest does not match
+ * file:// navigations. Not currently wired up in src/background/index.ts —
+ * kept available pending empirical verification with a real browser.
+ */
+export function installNavigationFallback(): void {
+  chrome.webNavigation.onBeforeNavigate.addListener(
+    (details) => {
+      if (details.frameId !== 0) {
+        return;
+      }
+      const viewerUrl = viewerUrlFor(details.url, chrome.runtime.getURL('viewer.html'));
+      void chrome.tabs.update(details.tabId, { url: viewerUrl });
+    },
+    { url: [{ urlPrefix: 'file://', urlSuffix: '.pdf' }] },
+  );
+}
