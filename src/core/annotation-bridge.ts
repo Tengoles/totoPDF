@@ -31,68 +31,81 @@ const MODE_TO_EDITOR: Record<ToolMode, number> = {
   textbox: EDITOR_TYPE.FREETEXT,
 };
 
+/** Initial text-box appearance, so switching to the tool arms the user's settings. */
+export interface TextBoxDefaults {
+  color: string;
+  size: number;
+}
+
 export function createAnnotationBridge(
   bus: DispatchBus,
   palette: readonly PaletteEntry[],
+  textBox: TextBoxDefaults,
 ): AnnotationBridge {
   let mode: ToolMode = 'none';
   let colorIndex = 0;
+  let textColor = textBox.color;
+  let textSize = textBox.size;
+
+  function param(source: AnnotationBridge, type: number, value: string | number): void {
+    bus.dispatch('switchannotationeditorparams', { source, type, value });
+  }
+
+  function setHighlightColorIndex(this: AnnotationBridge, index: number): void {
+    const entry = palette[index];
+    if (!entry) {
+      return;
+    }
+    colorIndex = index;
+    param(this, EDITOR_PARAM.HIGHLIGHT_COLOR, entry.hex);
+  }
+
+  function setFreeTextColor(this: AnnotationBridge, hex: string): void {
+    textColor = hex;
+    param(this, EDITOR_PARAM.FREETEXT_COLOR, hex);
+  }
+
+  function setFreeTextSize(this: AnnotationBridge, size: number): void {
+    textSize = size;
+    param(this, EDITOR_PARAM.FREETEXT_SIZE, size);
+  }
+
+  function setMode(this: AnnotationBridge, next: ToolMode): void {
+    mode = next;
+    bus.dispatch('switchannotationeditormode', { source: this, mode: MODE_TO_EDITOR[next] });
+    // Arming on entry keeps the two tools symmetric: whichever you pick uses
+    // your settings rather than pdf.js's built-in defaults.
+    if (next === 'highlight') {
+      setHighlightColorIndex.call(this, colorIndex);
+    } else if (next === 'textbox') {
+      setFreeTextColor.call(this, textColor);
+      setFreeTextSize.call(this, textSize);
+    }
+  }
+
+  function handleKey(this: AnnotationBridge, event: Pick<KeyboardEvent, 'key'>): boolean {
+    if (event.key === 'Escape' && mode !== 'none') {
+      setMode.call(this, 'none');
+      return true;
+    }
+    if (mode !== 'highlight') {
+      return false;
+    }
+    const index = Number(event.key) - 1;
+    if (!Number.isInteger(index) || index < 0 || index >= palette.length) {
+      return false;
+    }
+    setHighlightColorIndex.call(this, index);
+    return true;
+  }
 
   const bridge: AnnotationBridge = {
     getMode: () => mode,
-
-    setMode(next) {
-      mode = next;
-      bus.dispatch('switchannotationeditormode', { source: bridge, mode: MODE_TO_EDITOR[next] });
-      if (next === 'highlight') {
-        bridge.setHighlightColorIndex(colorIndex);
-      }
-    },
-
-    setHighlightColorIndex(index) {
-      const entry = palette[index];
-      if (!entry) {
-        return;
-      }
-      colorIndex = index;
-      bus.dispatch('switchannotationeditorparams', {
-        source: bridge,
-        type: EDITOR_PARAM.HIGHLIGHT_COLOR,
-        value: entry.hex,
-      });
-    },
-
-    setFreeTextColor(hex) {
-      bus.dispatch('switchannotationeditorparams', {
-        source: bridge,
-        type: EDITOR_PARAM.FREETEXT_COLOR,
-        value: hex,
-      });
-    },
-
-    setFreeTextSize(size) {
-      bus.dispatch('switchannotationeditorparams', {
-        source: bridge,
-        type: EDITOR_PARAM.FREETEXT_SIZE,
-        value: size,
-      });
-    },
-
-    handleKey(event) {
-      if (event.key === 'Escape' && mode !== 'none') {
-        bridge.setMode('none');
-        return true;
-      }
-      if (mode !== 'highlight') {
-        return false;
-      }
-      const index = Number(event.key) - 1;
-      if (!Number.isInteger(index) || index < 0 || index >= palette.length) {
-        return false;
-      }
-      bridge.setHighlightColorIndex(index);
-      return true;
-    },
+    setMode,
+    setHighlightColorIndex,
+    setFreeTextColor,
+    setFreeTextSize,
+    handleKey,
   };
 
   return bridge;

@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_PALETTE } from '../../src/core/settings';
 import { EDITOR_PARAM, EDITOR_TYPE, createAnnotationBridge } from '../../src/core/annotation-bridge';
 
+const TEXT_BOX = { color: '#D32F2F', size: 14 };
+
 function setup() {
   const dispatch = vi.fn();
-  const bridge = createAnnotationBridge({ dispatch }, DEFAULT_PALETTE);
+  const bridge = createAnnotationBridge({ dispatch }, DEFAULT_PALETTE, TEXT_BOX);
   return { dispatch, bridge };
 }
 
@@ -24,14 +26,53 @@ describe('annotation bridge', () => {
     });
   });
 
-  it('switches to the free text editor', () => {
+  it('switches to the free text editor and arms the configured colour and size', () => {
     const { dispatch, bridge } = setup();
     bridge.setMode('textbox');
     expect(dispatch).toHaveBeenCalledWith('switchannotationeditormode', {
       source: bridge,
       mode: EDITOR_TYPE.FREETEXT,
     });
+    expect(dispatch).toHaveBeenCalledWith('switchannotationeditorparams', {
+      source: bridge,
+      type: EDITOR_PARAM.FREETEXT_COLOR,
+      value: TEXT_BOX.color,
+    });
+    expect(dispatch).toHaveBeenCalledWith('switchannotationeditorparams', {
+      source: bridge,
+      type: EDITOR_PARAM.FREETEXT_SIZE,
+      value: TEXT_BOX.size,
+    });
   });
+
+  it('keeps the chosen highlight colour across a trip through the text box tool', () => {
+    const { dispatch, bridge } = setup();
+    bridge.setMode('highlight');
+    bridge.handleKey({ key: '3' });
+    bridge.setMode('textbox');
+    dispatch.mockClear();
+
+    bridge.setMode('highlight');
+    expect(dispatch).toHaveBeenCalledWith('switchannotationeditorparams', {
+      source: bridge,
+      type: EDITOR_PARAM.HIGHLIGHT_COLOR,
+      value: DEFAULT_PALETTE[2]?.hex,
+    });
+  });
+
+  it('reports Escape as unhandled when no tool is armed', () => {
+    const { bridge } = setup();
+    expect(bridge.handleKey({ key: 'Escape' })).toBe(false);
+  });
+
+  it.each(['0', '', ' ', 'e', 'Infinity', '1.5', '10'])(
+    'ignores the non-palette key %o while highlighting',
+    (key) => {
+      const { bridge } = setup();
+      bridge.setMode('highlight');
+      expect(bridge.handleKey({ key })).toBe(false);
+    },
+  );
 
   it('disarms back to none', () => {
     const { dispatch, bridge } = setup();
