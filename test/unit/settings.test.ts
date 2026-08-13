@@ -3,6 +3,7 @@ import {
   DEFAULT_PALETTE,
   DEFAULT_SETTINGS,
   loadSettings,
+  normalizeSettings,
   paletteToHighlightColors,
   saveSettings,
 } from '../../src/core/settings';
@@ -54,5 +55,60 @@ describe('settings persistence', () => {
     const loaded = await loadSettings(area);
     expect(loaded.activeColorIndex).toBe(2);
     expect(loaded.palette).toEqual(DEFAULT_PALETTE);
+  });
+});
+
+describe('normalizeSettings', () => {
+  it('falls back entirely when the stored value is not an object', () => {
+    expect(normalizeSettings(null)).toEqual(DEFAULT_SETTINGS);
+    expect(normalizeSettings('nonsense')).toEqual(DEFAULT_SETTINGS);
+  });
+
+  it('restores the default palette when the stored one is empty', () => {
+    // pdf.js treats an empty colour string as null and then hides the colour
+    // picker completely, so an empty palette must never reach it.
+    expect(normalizeSettings({ palette: [] }).palette).toEqual(DEFAULT_PALETTE);
+  });
+
+  it('drops palette entries with an unusable colour', () => {
+    const result = normalizeSettings({
+      palette: [{ name: 'good', hex: '#112233' }, { name: 'bad', hex: 'red' }],
+    });
+    expect(result.palette).toEqual([{ name: 'good', hex: '#112233' }]);
+  });
+
+  it('drops palette names that would break pdf.js parsing', () => {
+    // A ',' truncates the pair and makes pdf.js throw; an '=' corrupts the colour.
+    const result = normalizeSettings({
+      palette: [{ name: 'red,dark', hex: '#FF0000' }, { name: 'my=color', hex: '#00FF00' }],
+    });
+    expect(result.palette).toEqual(DEFAULT_PALETTE);
+  });
+
+  it('clamps an out-of-range active colour index', () => {
+    expect(normalizeSettings({ activeColorIndex: 99 }).activeColorIndex).toBe(0);
+    expect(normalizeSettings({ activeColorIndex: -1 }).activeColorIndex).toBe(0);
+  });
+
+  it('rejects a non-numeric text size', () => {
+    expect(normalizeSettings({ freeTextSize: 'big' }).freeTextSize).toBe(
+      DEFAULT_SETTINGS.freeTextSize,
+    );
+  });
+
+  it('never hands out the shared default palette array', () => {
+    const first = normalizeSettings(null);
+    expect(first.palette).not.toBe(DEFAULT_PALETTE);
+  });
+});
+
+describe('paletteToHighlightColors output is parseable by pdf.js', () => {
+  it('produces one name=#RRGGBB pair per entry, comma separated', () => {
+    const serialized = paletteToHighlightColors(DEFAULT_PALETTE);
+    const pairs = serialized.split(',');
+    expect(pairs).toHaveLength(DEFAULT_PALETTE.length);
+    for (const pair of pairs) {
+      expect(pair.split('=')).toHaveLength(2);
+    }
   });
 });

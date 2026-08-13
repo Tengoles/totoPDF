@@ -11,14 +11,21 @@ export function createStore<T extends object>(initial: T): Store<T> {
   return {
     get: () => state,
     set(patch) {
-      const changed = (Object.keys(patch) as (keyof T)[]).some(
-        (key) => !Object.is(state[key], patch[key]),
-      );
+      // for...in over a generic gives key: Extract<keyof T, string>, so this
+      // needs no cast -- unlike Object.keys, which widens to string.
+      let changed = false;
+      for (const key in patch) {
+        if (!Object.is(state[key], patch[key])) {
+          changed = true;
+          break;
+        }
+      }
       if (!changed) {
         return;
       }
       state = { ...state, ...patch };
-      for (const listener of listeners) {
+      // Snapshot: a listener may subscribe or unsubscribe during dispatch.
+      for (const listener of [...listeners]) {
         listener(state);
       }
     },
