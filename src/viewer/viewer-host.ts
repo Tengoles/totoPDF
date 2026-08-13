@@ -1,6 +1,10 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { EventBus, PDFLinkService, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.mjs';
+// Required, not optional. pdf.js sizes each page with var(--total-scale-factor),
+// which this stylesheet defines. Without it every page computes to zero width and
+// no canvas is ever rasterized -- the viewer looks blank with no error.
+import 'pdfjs-dist/web/pdf_viewer.css';
 import { MAX_CANVAS_DIM, MAX_CANVAS_PIXELS } from './canvas-budget';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('pdf.worker.mjs');

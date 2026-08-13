@@ -47,10 +47,20 @@ body {
   min-height: 0; /* without this the scroll container cannot shrink */
 }
 
-/* pdf.js needs a positioned, scrolling container. Relative is sufficient. */
-.pdf-container {
+/*
+ * pdf.js's PDFViewer constructor throws "The `container` must be absolutely
+ * positioned." if getComputedStyle(container).position !== 'absolute'. So the
+ * scroll container cannot itself be the flex item. #viewer-pane is the flex
+ * item and establishes the containing block; .pdf-container fills it absolutely.
+ */
+#viewer-pane {
   position: relative;
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.pdf-container {
+  position: absolute;
+  inset: 0;
   overflow: auto;
 }
