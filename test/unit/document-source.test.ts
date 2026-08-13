@@ -1,5 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import { loadFromOrigin, parseViewerQuery } from '../../src/core/document-source';
+import { loadFromFile, loadFromOrigin, parseViewerQuery } from '../../src/core/document-source';
+
+/** Minimal Response double: only the two members loadFromOrigin touches. */
+function okFetch(body: string): typeof fetch {
+  return vi.fn().mockResolvedValue({
+    ok: true,
+    arrayBuffer: async () => new TextEncoder().encode(body).buffer,
+  }) as unknown as typeof fetch;
+}
 
 describe('parseViewerQuery', () => {
   it('classifies a file URL as local', () => {
@@ -29,6 +37,66 @@ describe('parseViewerQuery', () => {
 
   it('rejects schemes we do not handle', () => {
     expect(parseViewerQuery('?src=javascript:alert(1)')).toBeNull();
+  });
+
+  it('preserves a literal plus sign in a path', () => {
+    expect(parseViewerQuery('?src=file:///C:/books/a+b.pdf')).toEqual({
+      kind: 'local',
+      url: 'file:///C:/books/a+b.pdf',
+    });
+  });
+
+  it('returns null rather than throwing on malformed percent-encoding', () => {
+    expect(parseViewerQuery('?src=%zz')).toBeNull();
+  });
+});
+
+describe('file name derivation', () => {
+  it('falls back to a default for a bare origin with no path', async () => {
+    const loaded = await loadFromOrigin(
+      { kind: 'remote', url: 'https://example.com' },
+      okFetch('abc'),
+    );
+    expect(loaded.fileName).toBe('document.pdf');
+  });
+
+  it('falls back to a default for a URL ending in a slash', async () => {
+    const loaded = await loadFromOrigin(
+      { kind: 'remote', url: 'https://example.com/papers/' },
+      okFetch('abc'),
+    );
+    expect(loaded.fileName).toBe('document.pdf');
+  });
+
+  it('keeps a literal percent sign in a file name instead of throwing', async () => {
+    const loaded = await loadFromOrigin(
+      { kind: 'remote', url: 'https://example.com/100%discount.pdf' },
+      okFetch('abc'),
+    );
+    expect(loaded.fileName).toBe('100%discount.pdf');
+  });
+
+  it('strips query and fragment from the file name', async () => {
+    const loaded = await loadFromOrigin(
+      { kind: 'remote', url: 'https://example.com/a.pdf?v=2#page=3' },
+      okFetch('abc'),
+    );
+    expect(loaded.fileName).toBe('a.pdf');
+  });
+});
+
+describe('loadFromFile', () => {
+  it('hashes a dropped file and records its name and origin', async () => {
+    const file = new File([new TextEncoder().encode('abc')], 'dropped.pdf', {
+      type: 'application/pdf',
+    });
+    const loaded = await loadFromFile(file);
+
+    expect(loaded.fileName).toBe('dropped.pdf');
+    expect(loaded.origin).toEqual({ kind: 'dropped', fileName: 'dropped.pdf' });
+    expect(loaded.identity).toBe(
+      'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
+    );
   });
 });
 
