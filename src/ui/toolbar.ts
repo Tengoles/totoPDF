@@ -56,8 +56,14 @@ function bindKeyboard(bridge: AnnotationBridge, onSave: () => void, syncPressedS
     'keydown',
     (event) => {
       if (event.ctrlKey && event.key.toLowerCase() === 's') {
+        // preventDefault unconditionally, or a held key still hands Chrome's
+        // own Save dialog the repeats. The repeats themselves are dropped:
+        // autorepeat fires every ~30ms, and each one used to start another
+        // save and another file picker on top of the one already running.
         event.preventDefault();
-        onSave();
+        if (!event.repeat) {
+          onSave();
+        }
         return;
       }
       if (event.target instanceof HTMLElement && event.target.isContentEditable) {

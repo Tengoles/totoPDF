@@ -31,16 +31,24 @@ export function createThumbnailWiring(
         host.viewer.currentPageNumber = pageNumber;
       },
       async renderPage(pageNumber, canvas) {
-        const page = await pdfDocument.getPage(pageNumber);
-        const unscaled = page.getViewport({ scale: 1 });
-        const viewport = page.getViewport({ scale: THUMBNAIL_WIDTH / unscaled.width });
-        canvas.width = Math.floor(viewport.width);
-        canvas.height = Math.floor(viewport.height);
-        // `canvas` alone is enough: pdf.js derives its own 2D context from
-        // it internally and ignores a separately supplied canvasContext
-        // whenever canvas is non-null (verified against pdfjs-dist 6.2.108's
-        // RenderParameters type and InternalRenderTask implementation).
-        await page.render({ canvas, viewport }).promise;
+        try {
+          const page = await pdfDocument.getPage(pageNumber);
+          const unscaled = page.getViewport({ scale: 1 });
+          const viewport = page.getViewport({ scale: THUMBNAIL_WIDTH / unscaled.width });
+          canvas.width = Math.floor(viewport.width);
+          canvas.height = Math.floor(viewport.height);
+          // `canvas` alone is enough: pdf.js derives its own 2D context from
+          // it internally and ignores a separately supplied canvasContext
+          // whenever canvas is non-null (verified against pdfjs-dist 6.2.108's
+          // RenderParameters type and InternalRenderTask implementation).
+          await page.render({ canvas, viewport }).promise;
+        } catch {
+          // Opening another document terminates this one's worker, which
+          // rejects any thumbnail still rendering. The rail is about to be
+          // destroyed anyway, and the call site cannot await this, so an
+          // unhandled rejection is the only thing left to prevent. A genuine
+          // per-page render failure costs one blank thumbnail.
+        }
       },
     });
   };

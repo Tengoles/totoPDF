@@ -179,6 +179,11 @@ body.notes-collapsed #annotation-rail {
   color: #d6e6ff;
 }
 
+.banner-success {
+  background: #23402c;
+  color: #d4f5de;
+}
+
 .loading {
   position: fixed;
   inset: 0;
