@@ -49,6 +49,21 @@ describe('parseViewerQuery', () => {
   it('returns null rather than throwing on malformed percent-encoding', () => {
     expect(parseViewerQuery('?src=%zz')).toBeNull();
   });
+
+  it('ignores a src= sequence nested inside another parameter value', () => {
+    expect(parseViewerQuery('?redirect=https://evil.test?src=https://evil.test/x.pdf')).toBeNull();
+  });
+
+  it('ignores a parameter whose name merely ends with src', () => {
+    expect(parseViewerQuery('?notsrc=https://example.com/a.pdf')).toBeNull();
+  });
+
+  it('finds src when it is not the first parameter', () => {
+    expect(parseViewerQuery('?a=1&src=https://example.com/a.pdf')).toEqual({
+      kind: 'remote',
+      url: 'https://example.com/a.pdf',
+    });
+  });
 });
 
 describe('file name derivation', () => {

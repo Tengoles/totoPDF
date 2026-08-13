@@ -12,17 +12,31 @@ export interface LoadedDocument {
   fileName: string;
 }
 
-export function parseViewerQuery(search: string): FetchableOrigin | null {
-  // Deliberately not URLSearchParams: it applies form-urlencoded rules and
-  // would turn a literal '+' in a file path into a space.
-  const match = /[?&]src=([^&]*)/.exec(search);
-  if (!match?.[1]) {
-    return null;
+/**
+ * Reads the `src` parameter by hand. URLSearchParams is unusable here because
+ * it applies form-urlencoded rules and turns a literal '+' in a file path into
+ * a space. Splitting only on '&' and matching the key exactly also avoids
+ * picking up a '?src=' sequence nested inside another parameter's value.
+ */
+function readSrcParam(search: string): string | null {
+  const query = search.startsWith('?') ? search.slice(1) : search;
+  for (const pair of query.split('&')) {
+    const separator = pair.indexOf('=');
+    if (separator === -1 || pair.slice(0, separator) !== 'src') {
+      continue;
+    }
+    try {
+      return decodeURIComponent(pair.slice(separator + 1));
+    } catch {
+      return null;
+    }
   }
-  let raw: string;
-  try {
-    raw = decodeURIComponent(match[1]);
-  } catch {
+  return null;
+}
+
+export function parseViewerQuery(search: string): FetchableOrigin | null {
+  const raw = readSrcParam(search);
+  if (!raw) {
     return null;
   }
   if (raw.startsWith('file://')) {
