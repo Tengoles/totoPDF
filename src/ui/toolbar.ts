@@ -40,22 +40,36 @@ function createSwatches(
   });
 }
 
+// renderToolbar runs once per document (a fresh capabilities assessment
+// re-renders the whole toolbar), and each run used to add its own
+// 'keydown' listener to window with no way to remove it -- window outlives
+// root.replaceChildren(), so every open stacked another listener forever.
+// One module-level controller, aborted and replaced each run, keeps exactly
+// one live listener no matter how many times renderToolbar is called.
+let keyboardAbort: AbortController | null = null;
+
 /** Ctrl+S saves globally; otherwise unarmed keys fall through to the bridge (Escape, 1-5). */
 function bindKeyboard(bridge: AnnotationBridge, onSave: () => void, syncPressedState: () => void): void {
-  window.addEventListener('keydown', (event) => {
-    if (event.ctrlKey && event.key.toLowerCase() === 's') {
-      event.preventDefault();
-      onSave();
-      return;
-    }
-    if (event.target instanceof HTMLElement && event.target.isContentEditable) {
-      return;
-    }
-    if (bridge.handleKey(event)) {
-      event.preventDefault();
-      syncPressedState();
-    }
-  });
+  keyboardAbort?.abort();
+  keyboardAbort = new AbortController();
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.ctrlKey && event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        onSave();
+        return;
+      }
+      if (event.target instanceof HTMLElement && event.target.isContentEditable) {
+        return;
+      }
+      if (bridge.handleKey(event)) {
+        event.preventDefault();
+        syncPressedState();
+      }
+    },
+    { signal: keyboardAbort.signal },
+  );
 }
 
 export function renderToolbar(root: HTMLElement, options: ToolbarOptions): void {

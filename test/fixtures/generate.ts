@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { PDFDocument, PDFString, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, PDFString, StandardFonts, degrees, rgb } from 'pdf-lib';
 import { PRE_ANNOTATED_MARKER } from './constants';
 
 const FIRST_LINE = 'A fixed point of a function is a value mapped to itself.';
@@ -46,9 +46,39 @@ async function generatePreAnnotated(): Promise<void> {
   await writeFile(resolve(import.meta.dirname, 'pre-annotated.pdf'), bytes);
 }
 
+/**
+ * A page rotated 90 degrees, so a highlight's screen-space rect only lands on
+ * the right words if the viewer accounts for the page's /Rotate entry rather
+ * than treating page-space and screen-space coordinates as the same thing.
+ */
+async function generateRotated(): Promise<void> {
+  const doc = await PDFDocument.create();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const page = doc.addPage([612, 792]);
+  page.setRotation(degrees(90));
+  page.drawText('Rotated page text for coordinate checks.', {
+    x: 60,
+    y: 700,
+    size: 14,
+    font,
+  });
+  const bytes = await doc.save();
+  await writeFile(resolve(import.meta.dirname, 'rotated.pdf'), bytes);
+}
+
+/** A page with no text content at all, the way a scanned page (image only) looks to pdf.js. */
+async function generateNoText(): Promise<void> {
+  const doc = await PDFDocument.create();
+  doc.addPage([612, 792]);
+  const bytes = await doc.save();
+  await writeFile(resolve(import.meta.dirname, 'no-text.pdf'), bytes);
+}
+
 async function main(): Promise<void> {
   await generateText();
   await generatePreAnnotated();
+  await generateRotated();
+  await generateNoText();
 }
 
 void main();

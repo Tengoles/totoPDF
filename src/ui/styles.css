@@ -130,3 +130,30 @@ body {
   color: var(--text-dim);
   font-size: 12px;
 }
+
+.banner {
+  padding: var(--space-2) var(--space-4);
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.banner-error {
+  background: #4a2326;
+  color: #ffd9dc;
+}
+
+.banner-notice {
+  background: #2e3a4a;
+  color: #d6e6ff;
+}
+
+.loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 32, 36, 0.75);
+  color: var(--text-dim);
+  font-size: 13px;
+}
