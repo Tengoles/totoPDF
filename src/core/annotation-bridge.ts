@@ -12,13 +12,20 @@ export const EDITOR_PARAM = {
 
 export type ToolMode = 'none' | 'highlight' | 'textbox';
 
-export interface DispatchBus {
-  dispatch(name: string, payload: Record<string, unknown>): void;
+/**
+ * The two ways into pdf.js's editor. They are deliberately different: mode is a
+ * property setter on PDFViewer, parameters go through the event bus. See
+ * src/viewer/editor-host.ts for the production adapter and why.
+ */
+export interface EditorHost {
+  setMode(mode: number): void;
+  setParam(type: number, value: string | number): void;
 }
 
 export interface AnnotationBridge {
   setMode(mode: ToolMode): void;
   getMode(): ToolMode;
+  reapply(): void;
   setHighlightColorIndex(index: number): void;
   setFreeTextColor(hex: string): void;
   setFreeTextSize(size: number): void;
@@ -38,7 +45,7 @@ export interface TextBoxDefaults {
 }
 
 export function createAnnotationBridge(
-  bus: DispatchBus,
+  host: EditorHost,
   palette: readonly PaletteEntry[],
   textBox: TextBoxDefaults,
 ): AnnotationBridge {
@@ -47,45 +54,41 @@ export function createAnnotationBridge(
   let textColor = textBox.color;
   let textSize = textBox.size;
 
-  function param(source: AnnotationBridge, type: number, value: string | number): void {
-    bus.dispatch('switchannotationeditorparams', { source, type, value });
-  }
-
-  function setHighlightColorIndex(this: AnnotationBridge, index: number): void {
+  function setHighlightColorIndex(index: number): void {
     const entry = palette[index];
     if (!entry) {
       return;
     }
     colorIndex = index;
-    param(this, EDITOR_PARAM.HIGHLIGHT_COLOR, entry.hex);
+    host.setParam(EDITOR_PARAM.HIGHLIGHT_COLOR, entry.hex);
   }
 
-  function setFreeTextColor(this: AnnotationBridge, hex: string): void {
+  function setFreeTextColor(hex: string): void {
     textColor = hex;
-    param(this, EDITOR_PARAM.FREETEXT_COLOR, hex);
+    host.setParam(EDITOR_PARAM.FREETEXT_COLOR, hex);
   }
 
-  function setFreeTextSize(this: AnnotationBridge, size: number): void {
+  function setFreeTextSize(size: number): void {
     textSize = size;
-    param(this, EDITOR_PARAM.FREETEXT_SIZE, size);
+    host.setParam(EDITOR_PARAM.FREETEXT_SIZE, size);
   }
 
-  function setMode(this: AnnotationBridge, next: ToolMode): void {
+  function setMode(next: ToolMode): void {
     mode = next;
-    bus.dispatch('switchannotationeditormode', { source: this, mode: MODE_TO_EDITOR[next] });
+    host.setMode(MODE_TO_EDITOR[next]);
     // Arming on entry keeps the two tools symmetric: whichever you pick uses
     // your settings rather than pdf.js's built-in defaults.
     if (next === 'highlight') {
-      setHighlightColorIndex.call(this, colorIndex);
+      setHighlightColorIndex(colorIndex);
     } else if (next === 'textbox') {
-      setFreeTextColor.call(this, textColor);
-      setFreeTextSize.call(this, textSize);
+      setFreeTextColor(textColor);
+      setFreeTextSize(textSize);
     }
   }
 
-  function handleKey(this: AnnotationBridge, event: Pick<KeyboardEvent, 'key'>): boolean {
+  function handleKey(event: Pick<KeyboardEvent, 'key'>): boolean {
     if (event.key === 'Escape' && mode !== 'none') {
-      setMode.call(this, 'none');
+      setMode('none');
       return true;
     }
     if (mode !== 'highlight') {
@@ -95,18 +98,18 @@ export function createAnnotationBridge(
     if (!Number.isInteger(index) || index < 0 || index >= palette.length) {
       return false;
     }
-    setHighlightColorIndex.call(this, index);
+    setHighlightColorIndex(index);
     return true;
   }
 
-  const bridge: AnnotationBridge = {
+  return {
     getMode: () => mode,
+    /** Re-applies the current mode. PDFViewer's setter no-ops before a document loads. */
+    reapply: () => setMode(mode),
     setMode,
     setHighlightColorIndex,
     setFreeTextColor,
     setFreeTextSize,
     handleKey,
   };
-
-  return bridge;
 }

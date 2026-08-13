@@ -1,5 +1,6 @@
 import '../ui/styles.css';
 import { createAnnotationBridge } from '../core/annotation-bridge';
+import { createEditorHost } from './editor-host';
 import { loadFromOrigin, parseViewerQuery } from '../core/document-source';
 import { loadSettings, paletteToHighlightColors } from '../core/settings';
 import { renderToolbar } from '../ui/toolbar';
@@ -15,10 +16,11 @@ async function main(): Promise<void> {
 
   const settings = await loadSettings(chrome.storage.local);
   const host = createViewerHost(container, viewerDiv, paletteToHighlightColors(settings.palette));
-  const bridge = createAnnotationBridge(host.eventBus, settings.palette, {
-    color: settings.freeTextColor,
-    size: settings.freeTextSize,
-  });
+  const bridge = createAnnotationBridge(
+    createEditorHost(host.viewer, host.eventBus),
+    settings.palette,
+    { color: settings.freeTextColor, size: settings.freeTextSize },
+  );
 
   const origin = parseViewerQuery(location.search);
 
@@ -45,6 +47,9 @@ async function main(): Promise<void> {
   if (origin) {
     const loaded = await loadFromOrigin(origin);
     await host.open(loaded.bytes);
+    // PDFViewer's annotationEditorMode setter no-ops with no document loaded,
+    // so a tool armed before the document opened must be re-applied now.
+    bridge.reapply();
   }
 }
 

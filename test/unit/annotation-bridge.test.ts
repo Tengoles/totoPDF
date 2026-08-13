@@ -5,59 +5,38 @@ import { EDITOR_PARAM, EDITOR_TYPE, createAnnotationBridge } from '../../src/cor
 const TEXT_BOX = { color: '#D32F2F', size: 14 };
 
 function setup() {
-  const dispatch = vi.fn();
-  const bridge = createAnnotationBridge({ dispatch }, DEFAULT_PALETTE, TEXT_BOX);
-  return { dispatch, bridge };
+  const setMode = vi.fn();
+  const setParam = vi.fn();
+  const bridge = createAnnotationBridge({ setMode, setParam }, DEFAULT_PALETTE, TEXT_BOX);
+  return { setMode, setParam, bridge };
 }
 
 describe('annotation bridge', () => {
   it('arms the highlight editor with the active color', () => {
-    const { dispatch, bridge } = setup();
+    const { setMode, setParam, bridge } = setup();
     bridge.setMode('highlight');
 
-    expect(dispatch).toHaveBeenCalledWith('switchannotationeditormode', {
-      source: bridge,
-      mode: EDITOR_TYPE.HIGHLIGHT,
-    });
-    expect(dispatch).toHaveBeenCalledWith('switchannotationeditorparams', {
-      source: bridge,
-      type: EDITOR_PARAM.HIGHLIGHT_COLOR,
-      value: DEFAULT_PALETTE[0]?.hex,
-    });
+    expect(setMode).toHaveBeenCalledWith(EDITOR_TYPE.HIGHLIGHT);
+    expect(setParam).toHaveBeenCalledWith(EDITOR_PARAM.HIGHLIGHT_COLOR, DEFAULT_PALETTE[0]?.hex);
   });
 
   it('switches to the free text editor and arms the configured colour and size', () => {
-    const { dispatch, bridge } = setup();
+    const { setMode, setParam, bridge } = setup();
     bridge.setMode('textbox');
-    expect(dispatch).toHaveBeenCalledWith('switchannotationeditormode', {
-      source: bridge,
-      mode: EDITOR_TYPE.FREETEXT,
-    });
-    expect(dispatch).toHaveBeenCalledWith('switchannotationeditorparams', {
-      source: bridge,
-      type: EDITOR_PARAM.FREETEXT_COLOR,
-      value: TEXT_BOX.color,
-    });
-    expect(dispatch).toHaveBeenCalledWith('switchannotationeditorparams', {
-      source: bridge,
-      type: EDITOR_PARAM.FREETEXT_SIZE,
-      value: TEXT_BOX.size,
-    });
+    expect(setMode).toHaveBeenCalledWith(EDITOR_TYPE.FREETEXT);
+    expect(setParam).toHaveBeenCalledWith(EDITOR_PARAM.FREETEXT_COLOR, TEXT_BOX.color);
+    expect(setParam).toHaveBeenCalledWith(EDITOR_PARAM.FREETEXT_SIZE, TEXT_BOX.size);
   });
 
   it('keeps the chosen highlight colour across a trip through the text box tool', () => {
-    const { dispatch, bridge } = setup();
+    const { setParam, bridge } = setup();
     bridge.setMode('highlight');
     bridge.handleKey({ key: '3' });
     bridge.setMode('textbox');
-    dispatch.mockClear();
+    setParam.mockClear();
 
     bridge.setMode('highlight');
-    expect(dispatch).toHaveBeenCalledWith('switchannotationeditorparams', {
-      source: bridge,
-      type: EDITOR_PARAM.HIGHLIGHT_COLOR,
-      value: DEFAULT_PALETTE[2]?.hex,
-    });
+    expect(setParam).toHaveBeenCalledWith(EDITOR_PARAM.HIGHLIGHT_COLOR, DEFAULT_PALETTE[2]?.hex);
   });
 
   it('reports Escape as unhandled when no tool is armed', () => {
@@ -75,27 +54,20 @@ describe('annotation bridge', () => {
   );
 
   it('disarms back to none', () => {
-    const { dispatch, bridge } = setup();
+    const { setMode, bridge } = setup();
     bridge.setMode('highlight');
     bridge.setMode('none');
-    expect(dispatch).toHaveBeenLastCalledWith('switchannotationeditormode', {
-      source: bridge,
-      mode: EDITOR_TYPE.NONE,
-    });
+    expect(setMode).toHaveBeenLastCalledWith(EDITOR_TYPE.NONE);
     expect(bridge.getMode()).toBe('none');
   });
 
   it('maps number keys 1-5 to palette entries while highlighting', () => {
-    const { dispatch, bridge } = setup();
+    const { setParam, bridge } = setup();
     bridge.setMode('highlight');
-    dispatch.mockClear();
+    setParam.mockClear();
 
     expect(bridge.handleKey({ key: '3' })).toBe(true);
-    expect(dispatch).toHaveBeenCalledWith('switchannotationeditorparams', {
-      source: bridge,
-      type: EDITOR_PARAM.HIGHLIGHT_COLOR,
-      value: DEFAULT_PALETTE[2]?.hex,
-    });
+    expect(setParam).toHaveBeenCalledWith(EDITOR_PARAM.HIGHLIGHT_COLOR, DEFAULT_PALETTE[2]?.hex);
   });
 
   it('ignores number keys outside the palette range', () => {
@@ -117,18 +89,10 @@ describe('annotation bridge', () => {
   });
 
   it('sets free text size and color', () => {
-    const { dispatch, bridge } = setup();
+    const { setParam, bridge } = setup();
     bridge.setFreeTextSize(20);
     bridge.setFreeTextColor('#112233');
-    expect(dispatch).toHaveBeenCalledWith('switchannotationeditorparams', {
-      source: bridge,
-      type: EDITOR_PARAM.FREETEXT_SIZE,
-      value: 20,
-    });
-    expect(dispatch).toHaveBeenCalledWith('switchannotationeditorparams', {
-      source: bridge,
-      type: EDITOR_PARAM.FREETEXT_COLOR,
-      value: '#112233',
-    });
+    expect(setParam).toHaveBeenCalledWith(EDITOR_PARAM.FREETEXT_SIZE, 20);
+    expect(setParam).toHaveBeenCalledWith(EDITOR_PARAM.FREETEXT_COLOR, '#112233');
   });
 });
