@@ -46,13 +46,13 @@ function openInChrome(origin: DocumentOrigin | null): void {
 /**
  * Refreshes the right-hand annotation rail whenever an editor's state
  * changes, so a highlight or text box appears in the list as soon as it is
- * created without waiting for a save. The brief and the journal tracker both
- * reference an "annotationeditorstateschanged" event, but that name is
- * dispatched nowhere in pdfjs-dist@6.2.108 (confirmed empirically -- see
- * task-15-report.md); the real event carrying this signal is
- * "editingstateschanged". This is its own subscription, independent of the
- * journal tracker's (deliberately left untouched, event-name mismatch and
- * all -- fixing it is outside this task).
+ * created without waiting for a save.
+ *
+ * The event is "editingstateschanged". An earlier revision used
+ * "annotationeditorstateschanged", which is dispatched nowhere in
+ * pdfjs-dist@6.2.108 -- it recorded nothing while appearing to work. The
+ * journal tracker in document-controller.ts subscribes to the same real event
+ * separately.
  */
 function setupAnnotationRail(host: ViewerHost, controller: DocumentController): void {
   const root = document.querySelector<HTMLElement>('#annotation-rail');
