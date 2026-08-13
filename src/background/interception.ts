@@ -1,9 +1,11 @@
 export const FILE_PDF_RULE_ID = 1;
 
 /**
- * declarativeNetRequest cannot percent-encode a captured group, so the raw
- * file URL is substituted verbatim. Paths containing '#' or '&' therefore fall
- * back to the manual "Open in totoPDF" action, which uses viewerUrlFor.
+ * declarativeNetRequest cannot percent-encode a captured group, so the raw file
+ * URL is substituted verbatim. The condition therefore refuses to match paths
+ * containing '&' or '#', which would be truncated by the redirect. Those open
+ * in Chrome's viewer, from where the toolbar action -- which does encode, via
+ * viewerUrlFor -- hands them to totoPDF intact.
  */
 export function buildFilePdfRule(viewerUrl: string): chrome.declarativeNetRequest.Rule {
   return {
@@ -14,7 +16,7 @@ export function buildFilePdfRule(viewerUrl: string): chrome.declarativeNetReques
       redirect: { regexSubstitution: `${viewerUrl}?src=\\1` },
     },
     condition: {
-      regexFilter: '^(file:///.*\\.pdf)$',
+      regexFilter: '^(file:///[^&#]*\\.pdf)$',
       isUrlFilterCaseSensitive: false,
       resourceTypes: ['main_frame' as chrome.declarativeNetRequest.ResourceType],
     },
