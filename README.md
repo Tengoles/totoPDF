@@ -38,8 +38,9 @@ content rather than something only totoPDF understands.
   it nears the visible rail and releases it once it scrolls back out, so
   opening a very large document does not allocate a full-size bitmap per
   page up front.
-- A collapsible "Notes" rail listing the highlights and text boxes on the
-  current document; clicking one jumps to its page.
+- A collapsible "Notes" rail listing the highlights and text boxes in the
+  current document, including ones saved in an earlier session, not just
+  ones made since it was opened; clicking an entry jumps to its page.
 - Encrypted PDFs and PDFs with no extractable text layer are detected on
   open, and the toolbar and a banner reflect what is and is not available
   (see Limitations).
