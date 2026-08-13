@@ -133,6 +133,45 @@ function createZoom(
   };
 }
 
+/** Scales whose resolved value depends on the container's size, so they have to be recomputed when it changes. */
+const CONTAINER_RELATIVE_SCALES = new Set(['auto', 'page-width', 'page-fit']);
+
+/**
+ * A fit mode is resolved to a number once and then stays put, so "Fit width"
+ * silently stops fitting the moment the window is resized or a rail is
+ * collapsed. Re-assigning the same scale value is what makes pdf.js resolve it
+ * again. Stock pdf.js does this in web/app.js, which this project does not
+ * ship, so it is ours to do.
+ *
+ * 'page-actual' is deliberately absent: it means 100 percent regardless of the
+ * container, so recomputing it would be pointless work.
+ */
+function bindFitModeToContainerSize(viewer: PDFViewer, container: HTMLDivElement): void {
+  let pending = false;
+
+  const observer = new ResizeObserver(() => {
+    // ResizeObserver fires per frame while a window drag is in progress;
+    // coalescing keeps one re-layout per frame instead of one per callback.
+    if (pending) {
+      return;
+    }
+    pending = true;
+    requestAnimationFrame(() => {
+      pending = false;
+      const { currentScaleValue } = viewer;
+      if (!currentScaleValue) {
+        return;
+      }
+      if (CONTAINER_RELATIVE_SCALES.has(currentScaleValue)) {
+        viewer.currentScaleValue = currentScaleValue;
+      }
+      viewer.update();
+    });
+  });
+
+  observer.observe(container);
+}
+
 export function createViewerHost(
   container: HTMLDivElement,
   viewerDiv: HTMLDivElement,
@@ -157,6 +196,8 @@ export function createViewerHost(
   eventBus.on('pagesinit', () => {
     viewer.currentScaleValue = DEFAULT_SCALE_VALUE;
   });
+
+  bindFitModeToContainerSize(viewer, container);
 
   const tasks = createTaskPool();
 
