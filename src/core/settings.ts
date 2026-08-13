@@ -42,6 +42,28 @@ export function paletteToHighlightColors(palette: readonly PaletteEntry[]): stri
 const SAFE_NAME = /^[A-Za-z0-9 _-]+$/;
 const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
 
+/** The same check normalizeSettings applies to stored colours, exposed for the UI. */
+export function isValidHex(value: string): boolean {
+  return HEX_COLOR.test(value);
+}
+
+/**
+ * Returns a new palette with one entry recoloured. An out-of-range index or a
+ * colour that is not #RRGGBB returns an unchanged copy: the palette editor's
+ * inputs are the only caller, and a palette that fails HEX_COLOR would be
+ * dropped entry by entry the next time normalizeSettings read it back.
+ */
+export function withPaletteColor(
+  palette: readonly PaletteEntry[],
+  index: number,
+  hex: string,
+): PaletteEntry[] {
+  if (!Number.isInteger(index) || index < 0 || index >= palette.length || !isValidHex(hex)) {
+    return [...palette];
+  }
+  return palette.map((entry, at) => (at === index ? { ...entry, hex } : entry));
+}
+
 function isPaletteEntry(value: unknown): value is PaletteEntry {
   return (
     typeof value === 'object' &&

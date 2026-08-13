@@ -27,6 +27,8 @@ export interface AnnotationBridge {
   getMode(): ToolMode;
   reapply(): void;
   setHighlightColorIndex(index: number): void;
+  /** Which palette entry is armed. Keys 1-5 change it without the toolbar's knowledge. */
+  getColorIndex(): number;
   setFreeTextColor(hex: string): void;
   setFreeTextSize(size: number): void;
   handleKey(event: Pick<KeyboardEvent, 'key'>): boolean;
@@ -105,8 +107,11 @@ export function createAnnotationBridge(
   return {
     getMode: () => mode,
     /**
-     * Re-applies the armed tool after a document loads, because PDFViewer's
-     * annotationEditorMode setter does nothing while no document is open.
+     * Re-applies the armed tool and its parameters. Called after a document
+     * loads, because PDFViewer's annotationEditorMode setter does nothing while
+     * no document is open, and again once pdf.js reports a completed mode
+     * switch, because that is the first moment a parameter reaches the defaults
+     * for new editors rather than whatever was still selected (see main.ts).
      * Skipped when nothing is armed: pdf.js already starts in NONE, and asking
      * it to switch to NONE before its editor manager exists throws.
      */
@@ -117,6 +122,7 @@ export function createAnnotationBridge(
     },
     setMode,
     setHighlightColorIndex,
+    getColorIndex: () => colorIndex,
     setFreeTextColor,
     setFreeTextSize,
     handleKey,

@@ -87,6 +87,103 @@ body {
   border-radius: 4px;
 }
 
+/* Which colour the next highlight uses. The swatch paints its own colour as an
+   inline style, so the armed state has to read as something other than a fill. */
+#toolbar .swatch[aria-current='true'] {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+
+/* A caption plus its input, kept on one line inside the toolbar row. */
+#toolbar .field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+#toolbar input[type='color'] {
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#toolbar input[type='number'] {
+  width: 52px;
+  background: #32363d;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: var(--space-1);
+  font: inherit;
+  font-size: 12px;
+}
+
+/* The wrapper is the popover's positioning context and the boundary an
+   outside click is measured against. */
+.palette-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.palette-popover {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  z-index: 20;
+  min-width: 232px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+/* display:flex above would otherwise defeat the hidden attribute. */
+.palette-popover[hidden] {
+  display: none;
+}
+
+.palette-popover h2 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.palette-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.palette-name {
+  flex: 1 1 auto;
+}
+
+.palette-armed {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.palette-note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+
 #thumbnail-rail {
   flex: 0 0 100px;
   border-right: 1px solid var(--border);

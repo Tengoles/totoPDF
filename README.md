@@ -19,8 +19,13 @@ content rather than something only totoPDF understands.
     that tab is open;
   - a file dragged onto an already-open totoPDF tab.
 - Highlight tool with a 5-colour palette; keys 1-5 switch colour while the
-  tool is armed.
-- Text box tool with configurable colour and size.
+  tool is armed. The "Colours" button opens a palette editor where any of the
+  five swatches can be set to any colour through the browser's own colour
+  picker. The palette, and which swatch is armed, are remembered across
+  sessions; recolouring the armed swatch applies to the next highlight with
+  no extra click.
+- Text box tool with a text colour and a font size (6 to 96) set from the
+  toolbar, also remembered across sessions.
 - Saves back through the File System Access API. The first save on a
   document prompts for a file location; the chosen handle is remembered in
   IndexedDB so later saves on the same document do not prompt again.
@@ -126,6 +131,20 @@ filing a bug that turns out to be one of these.
   configurable from the toolbar; the font itself is not -- pdf.js's
   FreeText editor does not expose a font-family option.
 
+- **pdf.js's own highlight colour menu lags a palette edit by one page
+  load.** Selecting a highlight already on the page opens a small colour
+  menu that pdf.js builds itself, from a list handed to PDFViewer once when
+  it is constructed and cached from then on. totoPDF's toolbar swatches
+  drive the editor's colour parameter directly, so a recoloured swatch
+  applies to the very next highlight; that built-in menu goes on offering
+  the previous five colours until the viewer tab is reloaded. Reload the tab
+  to bring the two in line.
+
+- **Highlight opacity is not adjustable.** pdf.js accepts colour and
+  thickness for highlights through the editor-parameter channel totoPDF
+  drives, but no opacity, so there is nothing for a control to change.
+  Highlights use pdf.js's own fixed opacity.
+
 - **The cross-reader check is partly done.** A saved file opens correctly in
   Microsoft Edge, confirmed by hand. Edge renders PDFs with PDFium, the same
   engine Chrome uses, so it is not fully independent evidence -- Firefox
@@ -135,9 +154,10 @@ filing a bug that turns out to be one of these.
   render them without synthesising its own appearance.
 
 - **What has, and has not, actually been checked in a browser.**
-  Highlighting, saving, the annotation rail, the thumbnail rail, and canvas
-  memory usage on a 1000-page document were all driven and observed in a
-  real Chromium session during development, via Playwright. The native OS
+  Highlighting, saving, the annotation rail, the thumbnail rail, canvas
+  memory usage on a 1000-page document, palette recolouring, and the text
+  box colour and size controls were all driven and observed in a real
+  Chromium session during development, via Playwright. The native OS
   save-file picker, drag-and-drop from a real desktop file manager, and
   `file://` interception have since been exercised by hand in Chrome and all
   work. Firefox and Acrobat remain unchecked -- see the table below.

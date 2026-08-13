@@ -124,6 +124,7 @@ export const fakeBridge: AnnotationBridge = {
   getMode: () => 'none',
   reapply: () => undefined,
   setHighlightColorIndex: () => undefined,
+  getColorIndex: () => 0,
   setFreeTextColor: () => undefined,
   setFreeTextSize: () => undefined,
   handleKey: () => false,

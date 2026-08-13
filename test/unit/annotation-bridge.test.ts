@@ -88,6 +88,23 @@ describe('annotation bridge', () => {
     expect(bridge.getMode()).toBe('none');
   });
 
+  it('reports the armed colour index, including one chosen by a number key', () => {
+    // The toolbar reads this back to mark the armed swatch and to persist the
+    // choice: keys 1-5 change the colour without going through the toolbar.
+    const { bridge } = setup();
+    expect(bridge.getColorIndex()).toBe(0);
+    bridge.setMode('highlight');
+    bridge.handleKey({ key: '4' });
+    expect(bridge.getColorIndex()).toBe(3);
+  });
+
+  it('leaves the armed colour index alone when the index is out of range', () => {
+    const { bridge } = setup();
+    bridge.setHighlightColorIndex(2);
+    bridge.setHighlightColorIndex(99);
+    expect(bridge.getColorIndex()).toBe(2);
+  });
+
   it('sets free text size and color', () => {
     const { setParam, bridge } = setup();
     bridge.setFreeTextSize(20);

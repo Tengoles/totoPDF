@@ -18,6 +18,7 @@ import { createAnnotationRailWiring } from './annotation-rail-wiring';
 import { createDocumentController, type DocumentController } from './document-controller';
 import { setupE2eHooks } from './e2e-hooks';
 import { createEditorHost } from './editor-host';
+import { createSettingsWiring, type SettingsWiring } from './settings-wiring';
 import { createThumbnailWiring } from './thumbnail-wiring';
 import { createViewerHost } from './viewer-host';
 
@@ -140,15 +141,21 @@ function renderChrome(
   settings: Settings,
   bridge: AnnotationBridge,
   controller: DocumentController,
+  wiring: SettingsWiring,
 ): void {
   const capabilities = controller.capabilities();
   renderToolbar(toolbarRoot, {
     palette: settings.palette,
+    activeColorIndex: settings.activeColorIndex,
+    freeTextColor: settings.freeTextColor,
+    freeTextSize: settings.freeTextSize,
     bridge,
     canHighlight: capabilities.canHighlight,
     canSave: capabilities.canSave,
     onSave: () => handleSave(controller),
     onOpenInChrome: () => openInChrome(controller.currentOrigin()),
+    // Every customization the toolbar offers is persisted by these four.
+    ...wiring,
   });
 }
 
@@ -223,6 +230,22 @@ async function start(
     settings.palette,
     { color: settings.freeTextColor, size: settings.freeTextSize },
   );
+  // The stored colour index only means something once something applies it;
+  // until this call the bridge always started on palette entry 0.
+  bridge.setHighlightColorIndex(settings.activeColorIndex);
+
+  // AnnotationEditorUIManager.updateParams sends a parameter to the selected
+  // editor when there is one, and to the defaults for new editors only when
+  // there is not. Its mode switch is async and unselects last, so the colour
+  // and size the bridge arms synchronously inside setMode can arrive while the
+  // editor from a moment ago is still selected -- observed as a text box drawn
+  // right after a highlight coming out in pdf.js's black at size 10 instead of
+  // the toolbar's settings. This event fires once the switch has finished and
+  // nothing is selected, which is when arming actually holds.
+  host.eventBus.on('annotationeditormodechanged', () => bridge.reapply());
+  const wiring = createSettingsWiring(settings, chrome.storage.local, (error) => {
+    showBanner(document.body, `Settings could not be saved. ${describeError(error)}`, 'error');
+  });
   const handles = await openHandleStore();
   const journal = await openJournal();
   const controller = createDocumentController(host, bridge, handles, journal);
@@ -233,7 +256,7 @@ async function start(
   // right now", so all three are rebuilt together: at startup with nothing
   // open, and after every open.
   const renderChromeNow = (): void => {
-    renderChrome(toolbarRoot, settings, bridge, controller);
+    renderChrome(toolbarRoot, settings, bridge, controller, wiring);
     presentThumbnails(controller.currentPdf());
     refreshAnnotationRail();
   };
