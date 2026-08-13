@@ -41,6 +41,19 @@ async function resolveHandle(
   return picked;
 }
 
+/**
+ * The toolbar's Save button is disabled for this case, but Ctrl+S is a
+ * global shortcut that does not know about disabled state -- this is the
+ * real gate. An incremental update over an encrypted document would need
+ * to encrypt the appended objects too, which totoPDF does not do, so
+ * writing one here could hand the user back a corrupt file.
+ */
+function assertSaveAllowed(capabilities: Capabilities): void {
+  if (!capabilities.canSave) {
+    throw new Error(ENCRYPTED_REASON);
+  }
+}
+
 type AnnotationStorage = PDFDocumentProxy['annotationStorage'];
 
 /**
@@ -124,14 +137,7 @@ export function createDocumentController(
     if (!pdfDocument || !current) {
       return;
     }
-    // The toolbar's Save button is disabled for this case, but Ctrl+S is a
-    // global shortcut that does not know about disabled state -- this is the
-    // real gate. An incremental update over an encrypted document would need
-    // to encrypt the appended objects too, which totoPDF does not do, so
-    // writing one here could hand the user back a corrupt file.
-    if (!capabilities.canSave) {
-      throw new Error(ENCRYPTED_REASON);
-    }
+    assertSaveAllowed(capabilities);
     const { bytes } = await buildSavedBytes(pdfDocument);
     const handle = await resolveHandle(handles, current.identity, current.fileName);
     const outcome = await writeBytes(handle, bytes);
