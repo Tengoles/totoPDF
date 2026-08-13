@@ -30,4 +30,12 @@ describe('handle store', () => {
     await store.remove('hash-a');
     await expect(store.get('hash-a')).resolves.toBeUndefined();
   });
+
+  it('commits writes, so a fresh connection sees them', async () => {
+    const first = await openHandleStore('totopdf-test-5');
+    await first.put('hash-a', fakeHandle('durable.pdf'));
+
+    const second = await openHandleStore('totopdf-test-5');
+    expect((await second.get('hash-a'))?.name).toBe('durable.pdf');
+  });
 });
