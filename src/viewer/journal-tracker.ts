@@ -3,6 +3,7 @@ import { createDebouncedRecorder, type Journal } from '../core/recovery-journal'
 import type { ViewerHost } from './viewer-host';
 
 type AnnotationStorage = PDFDocumentProxy['annotationStorage'];
+type Serializable = AnnotationStorage['serializable'];
 
 /**
  * `serializable.map` is a real Map instance. JSON.stringify cannot see
@@ -10,14 +11,30 @@ type AnnotationStorage = PDFDocumentProxy['annotationStorage'];
  * directly would silently produce "{}": the journal would look like it is
  * working while recording nothing. Spread the entries into an array first.
  */
-function serializeAnnotationState(storage: AnnotationStorage): string {
-  const { map, hash } = storage.serializable;
+function serializeAnnotationState(serializable: Serializable): string {
+  const { map, hash } = serializable;
   return JSON.stringify({ hash, entries: map ? [...map] : [] });
+}
+
+/**
+ * A digest of everything the user has actually edited. pdf.js serializes an
+ * existing annotation the user has not touched to null and leaves it out, so
+ * merely opening an already-annotated file does not move this, and neither
+ * does selecting, deselecting or scrolling. Only content does.
+ */
+export function contentHash(pdf: PDFDocumentProxy | null): string {
+  return pdf?.annotationStorage.serializable.hash ?? '';
 }
 
 export interface JournalTracker {
   arm(identity: string): void;
-  clearSaved(identity: string): Promise<void>;
+  /**
+   * `savedHash` is the annotation hash the written bytes were built from, not
+   * the hash now. A highlight made while a large book was serializing did not
+   * reach the file, and reporting it as saved would drop it from the tab-close
+   * warning.
+   */
+  clearSaved(identity: string, savedHash: string): Promise<void>;
   isDirty(): boolean;
 }
 
@@ -31,8 +48,12 @@ export function createJournalTracker(
   host: ViewerHost,
   journal: Journal,
   currentPdf: () => PDFDocumentProxy | null,
+  /** Called only for changes that altered the document, never for selections. */
+  onContentChange: () => void,
 ): JournalTracker {
   let dirty = false;
+  /** What the file on disk holds, as a hash. Empty is the document as opened. */
+  let savedHash = '';
   let identity: string | null = null;
   let record: ((payload: string, now: number) => void) | null = null;
 
@@ -42,18 +63,32 @@ export function createJournalTracker(
   // AnnotationEditorUIManager whenever editor state actually changes -- an
   // editor added, removed, selected, or the undo stack moving.
   host.eventBus.on('editingstateschanged', () => {
-    const storage = currentPdf()?.annotationStorage;
-    if (!storage || !record) {
+    const pdf = currentPdf();
+    if (!pdf || !record) {
       return;
     }
-    dirty = true;
-    record(serializeAnnotationState(storage), Date.now());
+    const serializable = pdf.annotationStorage.serializable;
+    // "Selected" is in that list, and selecting a highlight already on the
+    // page changes nothing about the document. Comparing the hash against what
+    // the file holds is what tells an edit from a click: without it a click
+    // raised the tab-close warning over nothing, and would now also spend a
+    // write appending a revision byte-identical to the one already saved.
+    // Undoing back to the saved state lands here too, and correctly reports
+    // the document clean again.
+    dirty = serializable.hash !== savedHash;
+    if (!dirty) {
+      return;
+    }
+    record(serializeAnnotationState(serializable), Date.now());
+    onContentChange();
   });
 
   return {
     arm(nextIdentity) {
       identity = nextIdentity;
       dirty = false;
+      // A document just opened matches the file it came from by definition.
+      savedHash = contentHash(currentPdf());
       record = createDebouncedRecorder(journal, nextIdentity, 1000);
     },
     /**
@@ -62,10 +97,11 @@ export function createJournalTracker(
      * whatever is open now as clean because a different document reached disk
      * is exactly how unsaved work disappears without a prompt.
      */
-    async clearSaved(savedIdentity) {
+    async clearSaved(savedIdentity, hash) {
       await journal.clear(savedIdentity);
       if (identity === savedIdentity) {
-        dirty = false;
+        savedHash = hash;
+        dirty = contentHash(currentPdf()) !== hash;
       }
     },
     isDirty: () => dirty,

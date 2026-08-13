@@ -1,6 +1,7 @@
 import type { AnnotationBridge, ToolMode } from '../core/annotation-bridge';
 import type { PaletteEntry } from '../core/settings';
 import { createPaletteMenu } from './palette';
+import { createSaveStatusReadout, type SaveStatusSource } from './save-status';
 import { createTextBoxControls, type TextBoxControlOptions } from './textbox-controls';
 import { applyZoomAction, type ZoomController, zoomKeyAction } from './zoom';
 import { createZoomControls } from './zoom-control';
@@ -18,6 +19,8 @@ export interface ToolbarOptions extends TextBoxControlOptions {
   zoom: ZoomController;
   canHighlight: boolean;
   canSave: boolean;
+  /** Drives the readout next to Save. Survives this toolbar being rebuilt. */
+  saveStatus: SaveStatusSource;
   onSave(): void;
   onOpenInChrome(): void;
   onPaletteRecolor(index: number, hex: string): void;
@@ -254,6 +257,9 @@ export function renderToolbar(root: HTMLElement, options: ToolbarOptions): void 
     createZoomControls(zoom, signal),
     rails.notes,
     openInChrome,
+    // Next to the button it is about, and on the same abort signal as every
+    // other listener that outlives this toolbar's elements.
+    createSaveStatusReadout(options.saveStatus, signal),
     save,
   );
   syncPressedState();

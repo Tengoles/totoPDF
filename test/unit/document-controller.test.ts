@@ -5,6 +5,7 @@ import { createDocumentController } from '../../src/viewer/document-controller';
 import {
   deferred,
   fakeBridge,
+  fakeDoc,
   fakeHandle,
   fakeHost,
   fakeJournal,
@@ -221,15 +222,29 @@ describe('isDirty', () => {
   it('is false until an editor change and false again after a save', async () => {
     const store = fakeStore();
     store.rows.set('a', fakeHandle().handle);
-    const { controller, host } = controllerFor(sequencedOpen(fakePdf(A)), store);
+    const doc = fakeDoc(A);
+    const { controller, host } = controllerFor(sequencedOpen(doc.proxy), store);
 
     await controller.present(loadedDoc('a'));
     expect(controller.isDirty()).toBe(false);
 
+    doc.edit();
     host.emitEditingChange();
     expect(controller.isDirty()).toBe(true);
 
     await expect(controller.save()).resolves.toBe('saved');
+    expect(controller.isDirty()).toBe(false);
+  });
+
+  // 'editingstateschanged' also fires when an editor is merely selected. The
+  // tab-close warning used to treat that as unsaved work and cry wolf over a
+  // document nobody had changed.
+  it('stays clean when an editor is only selected, leaving the content alone', async () => {
+    const { controller, host } = controllerFor(sequencedOpen(fakePdf(A)));
+
+    await controller.present(loadedDoc('a'));
+    host.emitEditingChange();
+
     expect(controller.isDirty()).toBe(false);
   });
 
@@ -241,13 +256,17 @@ describe('isDirty', () => {
       await gate.promise;
       return store.rows.get(identity);
     };
-    const { controller, host } = controllerFor(sequencedOpen(fakePdf(A), fakePdf(B)), store);
+    const a = fakeDoc(A);
+    const b = fakeDoc(B);
+    const { controller, host } = controllerFor(sequencedOpen(a.proxy, b.proxy), store);
 
     await controller.present(loadedDoc('a'));
+    a.edit();
     host.emitEditingChange();
 
     const saving = controller.save();
     await controller.present(loadedDoc('b'));
+    b.edit();
     host.emitEditingChange();
     gate.resolve();
     await saving;

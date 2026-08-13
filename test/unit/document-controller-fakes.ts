@@ -29,13 +29,29 @@ export function deferred<T>(): Deferred<T> {
   return { promise, resolve, reject };
 }
 
+export interface FakeDoc {
+  proxy: PDFDocumentProxy;
+  /**
+   * Moves the annotation-storage hash the way a real edit does. Selection
+   * changes deliberately do not call this: pdf.js fires the same
+   * 'editingstateschanged' event for both, and the hash is the only thing
+   * that tells them apart.
+   */
+  edit(): void;
+}
+
+let hashCounter = 0;
+
 /**
  * `marker` is written into both the original and the saved bytes, so a test
  * can tell which document's content reached a file. buildSavedBytes enforces
  * the incremental-update prefix, so saved must extend original.
  */
-export function fakePdf(marker: number, options: { encrypted?: boolean } = {}): PDFDocumentProxy {
-  return {
+export function fakeDoc(marker: number, options: { encrypted?: boolean } = {}): FakeDoc {
+  // pdf.js reports '' for an untouched document and a digest once anything
+  // the user made is in the storage.
+  let hash = '';
+  const proxy = {
     getData: () => Promise.resolve(new Uint8Array([marker, marker])),
     saveDocument: () => Promise.resolve(new Uint8Array([marker, marker, 0xff])),
     getMetadata: () =>
@@ -44,8 +60,24 @@ export function fakePdf(marker: number, options: { encrypted?: boolean } = {}): 
       }),
     getPage: () =>
       Promise.resolve({ getTextContent: () => Promise.resolve({ items: [{ str: 'a' }] }) }),
-    annotationStorage: { serializable: { map: null, hash: '0' } },
+    annotationStorage: {
+      get serializable() {
+        return { map: null, hash };
+      },
+    },
   } as unknown as PDFDocumentProxy;
+
+  return {
+    proxy,
+    edit: () => {
+      hashCounter += 1;
+      hash = `h${hashCounter}`;
+    },
+  };
+}
+
+export function fakePdf(marker: number, options: { encrypted?: boolean } = {}): PDFDocumentProxy {
+  return fakeDoc(marker, options).proxy;
 }
 
 export function savedBytesFor(marker: number): Uint8Array {
@@ -55,16 +87,26 @@ export function savedBytesFor(marker: number): Uint8Array {
 export interface FakeHandle {
   handle: FileSystemFileHandle;
   written: Uint8Array[];
+  /**
+   * How many times readwrite was actually asked for. An autosave has no user
+   * activation, so this must stay at zero on every automatic path.
+   */
+  requests(): number;
 }
 
 export function fakeHandle(log: string[] = [], permission: PermissionState = 'granted'): FakeHandle {
   const written: Uint8Array[] = [];
+  let requested = 0;
   const handle = {
     queryPermission: () => {
       log.push('permission');
       return Promise.resolve(permission);
     },
-    requestPermission: () => Promise.resolve(permission),
+    requestPermission: () => {
+      requested += 1;
+      log.push('request');
+      return Promise.resolve(permission);
+    },
     createWritable: () => {
       log.push('write');
       return Promise.resolve({
@@ -76,7 +118,7 @@ export function fakeHandle(log: string[] = [], permission: PermissionState = 'gr
       });
     },
   } as unknown as FileSystemFileHandle;
-  return { handle, written };
+  return { handle, written, requests: () => requested };
 }
 
 export interface FakeStore extends HandleStore {

@@ -21,6 +21,7 @@ import { setupE2eHooks } from './e2e-hooks';
 import { createEditorHost } from './editor-host';
 import { createSettingsWiring, type SettingsWiring } from './settings-wiring';
 import { createThumbnailWiring } from './thumbnail-wiring';
+import { confirmDiscardUnsaved, setupUnloadGuard } from './unsaved-guard';
 import { createViewerHost } from './viewer-host';
 
 const SAVE_CONFIRMATION_MS = 5000;
@@ -28,9 +29,8 @@ const SAVE_CONFIRMATION_MS = 5000;
 /** The tab title with nothing open. */
 const APP_TITLE = 'totoPDF';
 
-const UNSAVED_SWITCH_WARNING =
-  'This document has unsaved annotations, and opening another document discards them. ' +
-  'Cancel, press Ctrl+S to write them into the file, then open the other document.';
+const AUTOSAVE_STOPPED =
+  'Automatic saving stopped for this document. Press Ctrl+S to save it. The write failed with:';
 
 const FILE_ACCESS_HINT =
   'Chrome blocks extensions from reading local files until you allow it: open ' +
@@ -49,29 +49,6 @@ function describeLoadFailure(error: unknown, origin: FetchableOrigin): string {
   return origin.kind === 'local'
     ? `${describeError(error)} ${FILE_ACCESS_HINT}`
     : describeError(error);
-}
-
-/**
- * A crash or an accidental tab close should not silently lose unsaved
- * annotations. Warn before the tab unloads while the journal is the only
- * copy of them left.
- */
-function setupUnloadGuard(controller: DocumentController): void {
-  window.addEventListener('beforeunload', (event) => {
-    if (controller.isDirty()) {
-      event.preventDefault();
-    }
-  });
-}
-
-/**
- * beforeunload never fires for an in-page document switch, so it cannot cover
- * the likelier way to lose a session's work: dropping a second book onto a
- * viewer holding thirty unsaved highlights. Every entry point that replaces
- * the open document asks first.
- */
-function confirmDiscardUnsaved(controller: DocumentController): boolean {
-  return !controller.isDirty() || window.confirm(UNSAVED_SWITCH_WARNING);
 }
 
 /** A dropped file has no navigable URL, so there is nothing for Chrome to open. */
@@ -161,6 +138,7 @@ function renderChrome(
     zoom,
     canHighlight: capabilities.canHighlight,
     canSave: capabilities.canSave,
+    saveStatus: controller.saveStatus,
     onSave: () => handleSave(controller),
     onOpenInChrome: () => openInChrome(controller.currentOrigin()),
     // Every customization the toolbar offers is persisted by these four.
@@ -257,7 +235,12 @@ async function start(
   });
   const handles = await openHandleStore();
   const journal = await openJournal();
-  const controller = createDocumentController(host, bridge, handles, journal);
+  const controller = createDocumentController(host, bridge, handles, journal, (error) => {
+    // Once per document, and autosave is off for it from here. Saying it once
+    // and naming the way out beats a banner every two seconds that still does
+    // not save the file.
+    showBanner(document.body, `${AUTOSAVE_STOPPED} ${describeError(error)}`, 'error');
+  });
   const presentThumbnails = createThumbnailWiring(host);
   const refreshAnnotationRail = createAnnotationRailWiring(host, controller);
 

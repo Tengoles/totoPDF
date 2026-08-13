@@ -38,6 +38,12 @@ content rather than something only totoPDF understands.
 - Saves back through the File System Access API. The first save on a
   document prompts for a file location; the chosen handle is remembered in
   IndexedDB so later saves on the same document do not prompt again.
+- Once a document has been saved once, further annotations are written to the
+  same file automatically, two seconds after you stop editing. A readout next
+  to the Save button says which of "Unsaved changes", "Saving" and "Saved" is
+  true. Autosave is silent by construction: if there is no stored handle, or
+  its write permission is not already granted, it writes nothing and says so
+  rather than opening a dialog nobody asked for (see Limitations).
 - A debounced crash-recovery journal records annotation edits to IndexedDB
   as you make them, so an unexpected tab close does not lose unsaved work.
   It is a crash buffer only -- nothing in the current build reads it back
@@ -136,6 +142,26 @@ filing a bug that turns out to be one of these.
   highlight tool with a banner explaining it. Text boxes still work on
   every page regardless, since they do not need underlying text. totoPDF
   does not do OCR.
+
+- **Every save makes the file bigger, and autosave saves often.** A save
+  appends a new revision to the PDF rather than rewriting it, which is
+  precisely what makes it non-destructive: the original bytes are never
+  touched. The cost is that each save leaves the previous revision in the
+  file. A long annotating session with autosave on therefore grows the file
+  steadily, and the growth is roughly one appended revision per pause in
+  editing, not one per session. Nothing prunes old revisions. If the size
+  matters, open the file in a tool that rewrites PDFs to flatten it.
+
+- **Autosave never prompts, so sometimes it does not save.** Both the file
+  picker and the write-permission prompt require transient user activation,
+  which a timer running two seconds after the last keystroke does not have.
+  So autosave writes only when a handle is already stored for the document
+  and its readwrite permission already reads `granted`; otherwise it writes
+  nothing and the readout stays on "Unsaved changes". A document that has
+  never been saved is never autosaved, and Chrome dropping a grant between
+  sessions means the first save after a restart is a manual Ctrl+S. If a
+  write fails, autosave stops for that document, says so in a banner once,
+  and does not retry.
 
 - **Text boxes use pdf.js's one built-in font.** Colour and size are
   configurable from the toolbar; the font itself is not -- pdf.js's

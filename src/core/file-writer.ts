@@ -7,11 +7,24 @@
  * starts, not after it. See save() in src/viewer/document-controller.ts.
  */
 export async function ensureWritePermission(handle: FileSystemFileHandle): Promise<boolean> {
-  const options = { mode: 'readwrite' } as const;
-  if ((await handle.queryPermission(options)) === 'granted') {
+  if (await hasWritePermission(handle)) {
     return true;
   }
-  return (await handle.requestPermission(options)) === 'granted';
+  return (await handle.requestPermission(WRITE_OPTIONS)) === 'granted';
+}
+
+const WRITE_OPTIONS = { mode: 'readwrite' } as const;
+
+/**
+ * Reports whether readwrite is ALREADY granted, and never asks for it.
+ * queryPermission is a plain read of existing state; requestPermission is the
+ * one that opens a prompt, and it needs transient user activation to work at
+ * all. An autosave running two seconds after the last keystroke has none, so
+ * it uses this and declines when the answer is no. See createAutosave in
+ * src/viewer/autosave.ts.
+ */
+export async function hasWritePermission(handle: FileSystemFileHandle): Promise<boolean> {
+  return (await handle.queryPermission(WRITE_OPTIONS)) === 'granted';
 }
 
 /**

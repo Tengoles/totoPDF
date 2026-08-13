@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ensureWritePermission, writeGrantedBytes } from '../../src/core/file-writer';
+import {
+  ensureWritePermission,
+  hasWritePermission,
+  writeGrantedBytes,
+} from '../../src/core/file-writer';
 
 function handleWith(permission: PermissionState, requested: PermissionState = permission) {
   const write = vi.fn();
@@ -30,6 +34,23 @@ describe('ensureWritePermission', () => {
   it('reports denial', async () => {
     const { handle } = handleWith('prompt', 'denied');
     await expect(ensureWritePermission(handle)).resolves.toBe(false);
+  });
+});
+
+// What the autosave path calls instead of ensureWritePermission. It runs from
+// a timer with no user activation, where requestPermission would either be
+// rejected outright or open a prompt out of nowhere.
+describe('hasWritePermission', () => {
+  it('reports an already-granted handle', async () => {
+    const { handle, requestPermission } = handleWith('granted');
+    await expect(hasWritePermission(handle)).resolves.toBe(true);
+    expect(requestPermission).not.toHaveBeenCalled();
+  });
+
+  it('reports false for a promptable handle without prompting', async () => {
+    const { handle, requestPermission } = handleWith('prompt', 'granted');
+    await expect(hasWritePermission(handle)).resolves.toBe(false);
+    expect(requestPermission).not.toHaveBeenCalled();
   });
 });
 
