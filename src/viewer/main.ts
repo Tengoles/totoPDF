@@ -11,6 +11,7 @@ import {
 } from '../core/document-source';
 import { type HandleStore, openHandleStore } from '../core/file-handles';
 import { writeBytes } from '../core/file-writer';
+import { createDebouncedRecorder, type Journal, openJournal } from '../core/recovery-journal';
 import { buildSavedBytes } from '../core/save-pipeline';
 import { loadSettings, paletteToHighlightColors } from '../core/settings';
 import { renderToolbar } from '../ui/toolbar';
@@ -21,6 +22,83 @@ interface DocumentController {
   save(): Promise<void>;
   currentOrigin(): DocumentOrigin | null;
   currentPdf(): PDFDocumentProxy | null;
+  isDirty(): boolean;
+}
+
+async function resolveHandle(
+  handles: HandleStore,
+  identity: string,
+  suggestedName: string,
+): Promise<FileSystemFileHandle> {
+  const stored = await handles.get(identity);
+  if (stored) {
+    return stored;
+  }
+  const picked = await window.showSaveFilePicker({
+    suggestedName,
+    types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }],
+  });
+  await handles.put(identity, picked);
+  return picked;
+}
+
+type AnnotationStorage = PDFDocumentProxy['annotationStorage'];
+
+/**
+ * `serializable.map` is a real Map instance. JSON.stringify cannot see
+ * inside a Map -- it has no own enumerable properties -- so stringifying it
+ * directly would silently produce "{}": the journal would look like it is
+ * working while recording nothing. Spread the entries into an array first.
+ */
+function serializeAnnotationState(storage: AnnotationStorage): string {
+  const { map, hash } = storage.serializable;
+  return JSON.stringify({ hash, entries: map ? [...map] : [] });
+}
+
+interface JournalTracker {
+  arm(identity: string): void;
+  clear(): Promise<void>;
+  isDirty(): boolean;
+}
+
+/**
+ * Mirrors annotation-editor activity into the crash-recovery journal and
+ * tracks whether the open document has unsaved edits. The journal is a crash
+ * buffer, not a second source of truth -- it is re-armed with a fresh
+ * identity each time a document opens, and a successful save clears it.
+ */
+function createJournalTracker(
+  host: ViewerHost,
+  journal: Journal,
+  currentPdf: () => PDFDocumentProxy | null,
+): JournalTracker {
+  let dirty = false;
+  let identity: string | null = null;
+  let record: ((payload: string, now: number) => void) | null = null;
+
+  host.eventBus.on('annotationeditorstateschanged', () => {
+    const storage = currentPdf()?.annotationStorage;
+    if (!storage || !record) {
+      return;
+    }
+    dirty = true;
+    record(serializeAnnotationState(storage), Date.now());
+  });
+
+  return {
+    arm(nextIdentity) {
+      identity = nextIdentity;
+      dirty = false;
+      record = createDebouncedRecorder(journal, nextIdentity, 1000);
+    },
+    async clear() {
+      if (identity) {
+        await journal.clear(identity);
+      }
+      dirty = false;
+    },
+    isDirty: () => dirty,
+  };
 }
 
 /**
@@ -31,34 +109,24 @@ function createDocumentController(
   host: ViewerHost,
   bridge: AnnotationBridge,
   handles: HandleStore,
+  journal: Journal,
 ): DocumentController {
   let pdfDocument: PDFDocumentProxy | null = null;
   let current: LoadedDocument | null = null;
-
-  async function resolveHandle(identity: string, suggestedName: string) {
-    const stored = await handles.get(identity);
-    if (stored) {
-      return stored;
-    }
-    const picked = await window.showSaveFilePicker({
-      suggestedName,
-      types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }],
-    });
-    await handles.put(identity, picked);
-    return picked;
-  }
+  const tracker = createJournalTracker(host, journal, () => pdfDocument);
 
   async function save(): Promise<void> {
     if (!pdfDocument || !current) {
       return;
     }
     const { bytes } = await buildSavedBytes(pdfDocument);
-    const handle = await resolveHandle(current.identity, current.fileName);
+    const handle = await resolveHandle(handles, current.identity, current.fileName);
     const outcome = await writeBytes(handle, bytes);
     if (outcome.kind === 'permission-denied') {
       await handles.remove(current.identity);
       throw new Error('Write permission was denied. Choose the file again to save.');
     }
+    await tracker.clear();
   }
 
   async function present(loaded: LoadedDocument): Promise<void> {
@@ -67,6 +135,7 @@ function createDocumentController(
     // PDFViewer's annotationEditorMode setter no-ops with no document loaded,
     // so a tool armed before the document opened must be re-applied now.
     bridge.reapply();
+    tracker.arm(loaded.identity);
   }
 
   return {
@@ -74,7 +143,21 @@ function createDocumentController(
     save,
     currentOrigin: () => current?.origin ?? null,
     currentPdf: () => pdfDocument,
+    isDirty: () => tracker.isDirty(),
   };
+}
+
+/**
+ * A crash or an accidental tab close should not silently lose unsaved
+ * annotations. Warn before the tab unloads while the journal is the only
+ * copy of them left.
+ */
+function setupUnloadGuard(controller: DocumentController): void {
+  window.addEventListener('beforeunload', (event) => {
+    if (controller.isDirty()) {
+      event.preventDefault();
+    }
+  });
 }
 
 /** A dropped file has no navigable URL, so there is nothing for Chrome to open. */
@@ -141,7 +224,8 @@ async function main(): Promise<void> {
     { color: settings.freeTextColor, size: settings.freeTextSize },
   );
   const handles = await openHandleStore();
-  const controller = createDocumentController(host, bridge, handles);
+  const journal = await openJournal();
+  const controller = createDocumentController(host, bridge, handles, journal);
 
   renderToolbar(toolbarRoot, {
     palette: settings.palette,
@@ -154,6 +238,7 @@ async function main(): Promise<void> {
 
   setupDragAndDrop(controller);
   setupE2eHooks(host, controller);
+  setupUnloadGuard(controller);
 
   const origin = parseViewerQuery(location.search);
   if (origin) {
