@@ -16,8 +16,16 @@ import type { EditorHost } from '../core/annotation-bridge';
 export function createEditorHost(viewer: PDFViewer, eventBus: EventBus): EditorHost {
   return {
     setMode(mode) {
-      // No-ops until a document is loaded, hence AnnotationBridge.reapply().
-      viewer.annotationEditorMode = { mode };
+      try {
+        // Silently does nothing until a document is loaded, hence
+        // AnnotationBridge.reapply().
+        viewer.annotationEditorMode = { mode };
+      } catch {
+        // PDFViewer throws "The AnnotationEditor is not enabled." when its
+        // editor manager has not been constructed yet -- it is created while
+        // setting a document. The tool simply stays unarmed until then; there
+        // is no state to repair, and reapply() covers the case that matters.
+      }
     },
     setParam(type, value) {
       eventBus.dispatch('switchannotationeditorparams', { source: viewer, type, value });

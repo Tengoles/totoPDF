@@ -106,6 +106,14 @@ function setupE2eHooks(host: ViewerHost, controller: DocumentController): void {
   }
   Object.assign(window, {
     __totopdfHost: host,
+    // Routes through the same path a dropped file takes, rather than calling
+    // host.open directly: that is what assigns the document, computes its
+    // identity and re-applies the armed tool. A hook that bypassed it would
+    // exercise a path no user ever takes.
+    __totopdfOpen: async (bytes: number[]): Promise<void> => {
+      const file = new File([new Uint8Array(bytes)], 'e2e.pdf', { type: 'application/pdf' });
+      await controller.present(await loadFromFile(file));
+    },
     __totopdfSaveBytes: async (): Promise<number[]> => {
       const pdfDocument = controller.currentPdf();
       if (!pdfDocument) {

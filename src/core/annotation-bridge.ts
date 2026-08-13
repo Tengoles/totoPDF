@@ -104,8 +104,17 @@ export function createAnnotationBridge(
 
   return {
     getMode: () => mode,
-    /** Re-applies the current mode. PDFViewer's setter no-ops before a document loads. */
-    reapply: () => setMode(mode),
+    /**
+     * Re-applies the armed tool after a document loads, because PDFViewer's
+     * annotationEditorMode setter does nothing while no document is open.
+     * Skipped when nothing is armed: pdf.js already starts in NONE, and asking
+     * it to switch to NONE before its editor manager exists throws.
+     */
+    reapply: () => {
+      if (mode !== 'none') {
+        setMode(mode);
+      }
+    },
     setMode,
     setHighlightColorIndex,
     setFreeTextColor,
