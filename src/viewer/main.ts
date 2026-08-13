@@ -78,7 +78,12 @@ function createJournalTracker(
   let identity: string | null = null;
   let record: ((payload: string, now: number) => void) | null = null;
 
-  host.eventBus.on('annotationeditorstateschanged', () => {
+  // 'editingstateschanged', not 'annotationeditorstateschanged': the latter is
+  // dispatched nowhere in pdfjs-dist 6.2.108, so listening for it recorded
+  // nothing at all while looking perfectly healthy. This one fires from
+  // AnnotationEditorUIManager whenever editor state actually changes -- an
+  // editor added, removed, selected, or the undo stack moving.
+  host.eventBus.on('editingstateschanged', () => {
     const storage = currentPdf()?.annotationStorage;
     if (!storage || !record) {
       return;
