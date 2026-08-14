@@ -96,7 +96,11 @@ command above whenever you need them.
 
 ## Deploy
 
-Not yet published, but ready to be. Publishing a new version:
+Submitted to the Chrome Web Store, awaiting first review. `/release` runs
+this as a checklist and works out which dashboard fields need re-pasting;
+the steps below are what it does.
+
+Publishing a new version:
 
 1. Bump the version in **both** `public/manifest.json` and `package.json`.
    `test/unit/manifest.test.ts` fails if they drift, and the store refuses a
