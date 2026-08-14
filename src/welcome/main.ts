@@ -1,4 +1,5 @@
-import '../ui/styles.css';
+import '../ui/tokens.css';
+import './welcome.css';
 import { type MessageKey, t } from '../core/i18n';
 
 /**

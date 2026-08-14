@@ -1,0 +1,65 @@
+/*
+ * welcome.html: a single static page shown once on install, not the viewer
+ * layout styles.css assumes. The generic `body` rule in styles.css is not
+ * loaded on this page, so this file supplies its own background and text
+ * colour by way of tokens.css's custom properties, plus what is specific to
+ * a page of paragraphs: a readable measure, centring and a card to hold it.
+ */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body.welcome {
+  display: flex;
+  height: auto;
+  min-height: 100%;
+  align-items: center;
+  padding: var(--space-6) var(--space-4);
+}
+
+.welcome main {
+  width: 100%;
+  max-width: 40rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.welcome h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.welcome h2 {
+  margin: var(--space-2) 0 0;
+  font-size: 16px;
+}
+
+.welcome p {
+  margin: 0;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.welcome button {
+  align-self: flex-start;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  cursor: pointer;
+}
+
+.welcome button:hover {
+  border-color: var(--accent);
+}

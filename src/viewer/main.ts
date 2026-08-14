@@ -1,3 +1,4 @@
+import '../ui/tokens.css';
 import '../ui/styles.css';
 import type { AnnotationBridge } from '../core/annotation-bridge';
 import { createAnnotationBridge } from '../core/annotation-bridge';

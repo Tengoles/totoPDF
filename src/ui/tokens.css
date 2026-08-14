@@ -1,0 +1,28 @@
+/*
+ * The design tokens shared by every entry point (viewer, welcome, and any
+ * future page). Imported directly as a plain JS `import` from each entry's
+ * main.ts -- NOT `@import`ed from another stylesheet such as styles.css.
+ *
+ * Vite inlines a CSS `@import` during that importing file's own transform,
+ * before Rollup's cross-entry chunk dedup runs. Reaching this file one way
+ * from the viewer (via styles.css) and another way from welcome (via its own
+ * stylesheet) would duplicate this `:root` block into two output files, and
+ * along the way collapses the viewer's previously-split CSS assets into one
+ * large file. It still renders correctly, which is what makes it a trap:
+ * only `dist/` inspection catches it. A plain JS import from every entry
+ * point is what keeps Rollup deduping this file into a single output asset.
+ */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --bg: #1e2024;
+  --bg-raised: #26292f;
+  --border: #3a3f47;
+  --text: #e6e8ea;
+  --text-dim: #9aa0a8;
+  --accent: #5a8cdc;
+  font-family: system-ui, sans-serif;
+}
