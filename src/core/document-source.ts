@@ -79,6 +79,12 @@ export async function loadFromOrigin(
   fetchImpl: typeof fetch = fetch,
 ): Promise<LoadedDocument> {
   const response = await fetchImpl(origin.url);
+  // Kept as a guard, but it is not the live error path: Chrome resolves a
+  // successful file:// read as 200 and *rejects* on failure, so a missing or
+  // unreadable file arrives as a rejection from fetchImpl above, which
+  // describeLoadFailure turns into the file-access hint. This branch covers
+  // the injected fetchImpl in tests and anything Chrome may do differently
+  // later.
   if (!response.ok) {
     throw new Error(t('loadFailed', origin.url));
   }

@@ -170,13 +170,13 @@ totoPDF is a PDF viewer that lets a person annotate a PDF and save those annotat
 `declarativeNetRequest`
 
 ```
-Redirects a PDF URL to totoPDF's own viewer page. This is the mechanism that makes a PDF open in totoPDF rather than in Chrome's built-in viewer, which is the extension's core function. It is also used to let a single navigation through to Chrome's viewer when the user clicks "Open in Chrome".
+Redirects a local (file://) PDF URL to totoPDF's own viewer page. This is the mechanism that makes a PDF open in totoPDF rather than in Chrome's built-in viewer, which is the extension's core function. The rule matches file:///*.pdf only. It is also used to let a single navigation through to Chrome's viewer when the user clicks "Open in Chrome".
 ```
 
 `contextMenus`
 
 ```
-Adds one item, "Open in totoPDF", to the right-click menu on PDF links and PDF pages. This is how a user opens a PDF in totoPDF without changing any browser default.
+Adds one item, "Open in totoPDF", to the right-click menu on local (file://) PDF links and PDF pages. It is scoped to file:///* and does not appear on web pages. This is how a user opens a PDF in totoPDF without changing any browser default.
 ```
 
 `storage`

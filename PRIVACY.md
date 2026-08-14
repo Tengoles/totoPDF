@@ -51,18 +51,24 @@ Para eliminar las tres, desinstala la extensión. Chrome borra los datos de
 
 ## Qué permisos pide totoPDF, y por qué
 
-totoPDF pide acceso a los archivos de tu computadora (`file:///*`) y nada
-más. No pide acceso a sitios web, porque no abre PDF de la web: solo abre
-archivos que ya están en tu disco.
+El único acceso a contenido que pide totoPDF es a los archivos de tu
+computadora (`file:///*`). No pide acceso a ningún sitio web, porque no abre
+PDF de la web: solo abre archivos que ya están en tu disco.
 
-Si quieres anotar un PDF de internet, descárgalo y arrástralo a una pestaña
-de totoPDF. Un archivo arrastrado no necesita ningún permiso.
+Pide además tres permisos de la API de Chrome, y ninguno de ellos da acceso a
+tus datos: `declarativeNetRequest`, para abrir un PDF local en su propio visor
+en lugar del de Chrome; `contextMenus`, para agregar "Abrir en totoPDF" al
+menú del clic derecho; y `storage`, para recordar tu configuración de colores
+y tamaños. Esa es la lista completa.
 
-Además, para poder leer archivos de tu disco, tienes que activar "Permitir
-acceso a URL de archivo" en la tarjeta de totoPDF en `chrome://extensions`.
-Ese permiso es de Chrome, viene desactivado, una extensión no puede activarlo
-por su cuenta, y puedes desactivarlo cuando quieras. totoPDF lo usa solamente
-para leer un PDF que abriste.
+Si quieres anotar un PDF de internet, descárgalo y arrástralo a una pestaña de
+totoPDF. Un archivo arrastrado no necesita ningún permiso.
+
+Para que totoPDF pueda leer archivos de tu disco, también tienes que activar
+"Permitir acceso a URL de archivo" en la tarjeta de totoPDF en
+`chrome://extensions`. Ese permiso es de Chrome, viene desactivado, una
+extensión no puede activarlo por su cuenta, y puedes desactivarlo cuando
+quieras. totoPDF lo usa solamente para leer un PDF que abriste.
 
 ## Niños
 
@@ -134,17 +140,23 @@ To remove all three, uninstall the extension. Chrome deletes an extension's
 
 ## What permissions totoPDF asks for, and why
 
-totoPDF asks for access to files on your computer (`file:///*`) and nothing
-else. It does not ask for access to websites, because it does not open PDFs
-from the web: it opens files already on your disk.
+The only content access totoPDF asks for is to files on your computer
+(`file:///*`). It asks for access to no website at all, because it does not
+open PDFs from the web: it opens files already on your disk.
+
+It also asks for three Chrome API permissions, none of which grants access to
+your data: `declarativeNetRequest`, to open a local PDF in its own viewer
+rather than Chrome's; `contextMenus`, to add "Open in totoPDF" to the
+right-click menu; and `storage`, to remember your colour and size settings.
+That is the complete list.
 
 To annotate a PDF from the internet, download it and drag it onto a totoPDF
 tab. A dragged file needs no permission at all.
 
-Separately, reading files from your disk requires you to turn on "Allow access
-to file URLs" on totoPDF's `chrome://extensions` card. That switch is Chrome's,
-it is off by default, an extension cannot turn it on for itself, and you can
-turn it off at any time. totoPDF uses it only to read a PDF you open.
+For totoPDF to read files from your disk, you also have to turn on "Allow
+access to file URLs" on totoPDF's `chrome://extensions` card. That switch is
+Chrome's, it is off by default, an extension cannot turn it on for itself, and
+you can turn it off at any time. totoPDF uses it only to read a PDF you open.
 
 ## Children
 
