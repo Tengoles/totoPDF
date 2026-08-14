@@ -88,9 +88,9 @@
     "message": "Este PDF no tiene texto seleccionable, así que no se puede resaltar. Los cuadros de texto sí funcionan."
   },
 
-  "loadFailedHttp": {
-    "message": "No se pudo cargar $URL$ (HTTP $STATUS$)",
-    "placeholders": { "url": { "content": "$1" }, "status": { "content": "$2" } }
+  "loadFailed": {
+    "message": "No se pudo cargar $URL$",
+    "placeholders": { "url": { "content": "$1" } }
   },
 
   "saveStillOpening": { "message": "Espera a que el documento termine de abrirse y guarda después." },

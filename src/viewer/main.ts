@@ -4,7 +4,6 @@ import type { AnnotationBridge } from '../core/annotation-bridge';
 import { createAnnotationBridge } from '../core/annotation-bridge';
 import {
   type DocumentOrigin,
-  type FetchableOrigin,
   type LoadedDocument,
   loadFromFile,
   loadFromOrigin,
@@ -40,12 +39,11 @@ function describeError(error: unknown): string {
 
 /**
  * A first-run open of a file:// URL fails for one reason far more often than
- * any other, and the raw fetch error names none of it.
+ * any other, and the raw fetch error names none of it. Every origin reaching
+ * here is local (see FetchableOrigin), so the hint always applies.
  */
-function describeLoadFailure(error: unknown, origin: FetchableOrigin): string {
-  return origin.kind === 'local'
-    ? `${describeError(error)} ${FILE_ACCESS_HINT}`
-    : describeError(error);
+function describeLoadFailure(error: unknown): string {
+  return `${describeError(error)} ${FILE_ACCESS_HINT}`;
 }
 
 /** A dropped file has no navigable URL, so there is nothing for Chrome to open. */
@@ -198,7 +196,7 @@ async function openInitialDocument(
   try {
     loaded = await loadFromOrigin(origin);
   } catch (error) {
-    showBanner(document.body, describeLoadFailure(error, origin), 'error');
+    showBanner(document.body, describeLoadFailure(error), 'error');
     return;
   }
   await presentDocument(controller, renderChrome, loaded);

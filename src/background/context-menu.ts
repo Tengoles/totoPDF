@@ -18,7 +18,9 @@ function openInViewer(pdfUrl: string, tabId: number | undefined, inNewTab: boole
  * listener, which also calls this to refresh a title left stale by a Chrome
  * UI language change. `file:///*` patterns are included because local paths
  * the redirect rule refuses (those containing '&') reach totoPDF only through
- * this route.
+ * this route. Web URL patterns are gone along with remote loading: the menu
+ * cannot open what totoPDF can no longer fetch, and host_permissions no
+ * longer covers anything else.
  */
 export function installContextMenu(): void {
   chrome.contextMenus.removeAll(() => {
@@ -26,8 +28,8 @@ export function installContextMenu(): void {
       id: MENU_ID,
       title: t('contextMenuOpen'),
       contexts: ['link', 'page'],
-      targetUrlPatterns: ['*://*/*.pdf', '*://*/*.PDF', 'file:///*.pdf', 'file:///*.PDF'],
-      documentUrlPatterns: ['*://*/*', 'file:///*'],
+      targetUrlPatterns: ['file:///*.pdf', 'file:///*.PDF'],
+      documentUrlPatterns: ['file:///*'],
     });
   });
 }

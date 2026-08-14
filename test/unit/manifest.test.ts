@@ -15,11 +15,18 @@ describe('manifest', () => {
 
   it('requests only the permissions the code exercises', () => {
     // tabs was dropped: chrome.tabs.create/update need no permission, and the
-    // one place a tab's URL is read gets it from the <all_urls> host
+    // one place a tab's URL is read gets it from the file:// host
     // permission. webNavigation went with installNavigationFallback.
     expect(new Set(manifest.permissions)).toEqual(
       new Set(['declarativeNetRequest', 'contextMenus', 'storage']),
     );
+  });
+
+  it('asks for local file access only', () => {
+    // The extension reads PDFs from disk and makes no network requests, so
+    // there is nothing for a broader host permission to do. Widening this
+    // means re-justifying it to store review.
+    expect(manifest.host_permissions).toEqual(['file:///*']);
   });
 
   it('keeps the manifest and package versions in step', () => {

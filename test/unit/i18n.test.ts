@@ -60,9 +60,7 @@ describe('t', () => {
   });
 
   it('substitutes more than one argument in order', () => {
-    expect(t('loadFailedHttp', 'file:///a.pdf', '404')).toBe(
-      'Could not load file:///a.pdf (HTTP 404)',
-    );
+    expect(t('textSizeTitle', '8', '96')).toBe('Font size of text in a text box, 8 to 96.');
   });
 
   it('does not re-scan a substituted value for placeholders', () => {

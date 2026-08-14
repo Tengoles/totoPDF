@@ -1,8 +1,8 @@
 import { t } from './i18n';
 import { computeIdentity } from './identity';
 
-/** An origin whose bytes can be fetched by URL. */
-export type FetchableOrigin = { kind: 'local'; url: string } | { kind: 'remote'; url: string };
+/** An origin whose bytes can be fetched by URL. Always local: see parseViewerQuery. */
+export type FetchableOrigin = { kind: 'local'; url: string };
 
 export type DocumentOrigin = FetchableOrigin | { kind: 'dropped'; fileName: string };
 
@@ -43,9 +43,11 @@ export function parseViewerQuery(search: string): FetchableOrigin | null {
   if (raw.startsWith('file://')) {
     return { kind: 'local', url: raw };
   }
-  if (raw.startsWith('https://') || raw.startsWith('http://')) {
-    return { kind: 'remote', url: raw };
-  }
+  // Remote URLs are rejected on purpose, not unhandled: the product writes
+  // annotations back into the file it opened, which a remote fetch could
+  // never do more than once removed. host_permissions no longer grants
+  // fetch() anywhere but file://, so an http(s) URL here would fail anyway --
+  // this makes that a clean "no source" instead of a network error.
   return null;
 }
 
@@ -78,7 +80,7 @@ export async function loadFromOrigin(
 ): Promise<LoadedDocument> {
   const response = await fetchImpl(origin.url);
   if (!response.ok) {
-    throw new Error(t('loadFailedHttp', origin.url, String(response.status)));
+    throw new Error(t('loadFailed', origin.url));
   }
   const bytes = new Uint8Array(await response.arrayBuffer());
   return {

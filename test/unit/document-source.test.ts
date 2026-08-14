@@ -17,11 +17,9 @@ describe('parseViewerQuery', () => {
     });
   });
 
-  it('classifies an https URL as remote', () => {
-    expect(parseViewerQuery('?src=https://example.com/a.pdf')).toEqual({
-      kind: 'remote',
-      url: 'https://example.com/a.pdf',
-    });
+  it('rejects http(s) URLs -- totoPDF opens local files only, deliberately', () => {
+    expect(parseViewerQuery('?src=https://example.com/a.pdf')).toBeNull();
+    expect(parseViewerQuery('?src=http://example.com/a.pdf')).toBeNull();
   });
 
   it('decodes percent-encoded sources', () => {
@@ -59,9 +57,9 @@ describe('parseViewerQuery', () => {
   });
 
   it('finds src when it is not the first parameter', () => {
-    expect(parseViewerQuery('?a=1&src=https://example.com/a.pdf')).toEqual({
-      kind: 'remote',
-      url: 'https://example.com/a.pdf',
+    expect(parseViewerQuery('?a=1&src=file:///C:/books/a.pdf')).toEqual({
+      kind: 'local',
+      url: 'file:///C:/books/a.pdf',
     });
   });
 });
@@ -69,7 +67,7 @@ describe('parseViewerQuery', () => {
 describe('file name derivation', () => {
   it('falls back to a default for a bare origin with no path', async () => {
     const loaded = await loadFromOrigin(
-      { kind: 'remote', url: 'https://example.com' },
+      { kind: 'local', url: 'https://example.com' },
       okFetch('abc'),
     );
     expect(loaded.fileName).toBe('document.pdf');
@@ -77,7 +75,7 @@ describe('file name derivation', () => {
 
   it('falls back to a default for a URL ending in a slash', async () => {
     const loaded = await loadFromOrigin(
-      { kind: 'remote', url: 'https://example.com/papers/' },
+      { kind: 'local', url: 'https://example.com/papers/' },
       okFetch('abc'),
     );
     expect(loaded.fileName).toBe('document.pdf');
@@ -85,7 +83,7 @@ describe('file name derivation', () => {
 
   it('keeps a literal percent sign in a file name instead of throwing', async () => {
     const loaded = await loadFromOrigin(
-      { kind: 'remote', url: 'https://example.com/100%discount.pdf' },
+      { kind: 'local', url: 'https://example.com/100%discount.pdf' },
       okFetch('abc'),
     );
     expect(loaded.fileName).toBe('100%discount.pdf');
@@ -93,7 +91,7 @@ describe('file name derivation', () => {
 
   it('strips query and fragment from the file name', async () => {
     const loaded = await loadFromOrigin(
-      { kind: 'remote', url: 'https://example.com/a.pdf?v=2#page=3' },
+      { kind: 'local', url: 'https://example.com/a.pdf?v=2#page=3' },
       okFetch('abc'),
     );
     expect(loaded.fileName).toBe('a.pdf');
@@ -123,7 +121,7 @@ describe('loadFromOrigin', () => {
     } as unknown as Response);
 
     const loaded = await loadFromOrigin(
-      { kind: 'remote', url: 'https://example.com/papers/attention.pdf' },
+      { kind: 'local', url: 'https://example.com/papers/attention.pdf' },
       fetchImpl as unknown as typeof fetch,
     );
 
@@ -137,9 +135,9 @@ describe('loadFromOrigin', () => {
     const fetchImpl = vi.fn().mockResolvedValue({ ok: false, status: 404 } as unknown as Response);
     await expect(
       loadFromOrigin(
-        { kind: 'remote', url: 'https://example.com/missing.pdf' },
+        { kind: 'local', url: 'https://example.com/missing.pdf' },
         fetchImpl as unknown as typeof fetch,
       ),
-    ).rejects.toThrow('Could not load https://example.com/missing.pdf (HTTP 404)');
+    ).rejects.toThrow('Could not load https://example.com/missing.pdf');
   });
 });
