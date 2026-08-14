@@ -82,11 +82,20 @@ describe('the Spanish catalogue', () => {
     expect(Object.keys(spanish).sort()).toEqual(Object.keys(CATALOGUE).sort());
   });
 
-  it('declares the same placeholders as the English message', () => {
-    for (const [key, entry] of Object.entries(CATALOGUE)) {
-      expect(Object.keys(spanish[key]?.placeholders ?? {}).sort(), key).toEqual(
-        Object.keys(entry.placeholders ?? {}).sort(),
+  it('declares the same placeholder names at the same argument indices as English', () => {
+    // Comparing key sets alone would pass a Spanish entry that declared the
+    // same placeholder names as English but mapped them to swapped $N$
+    // indices -- e.g. url at $2$ and status at $1$ -- silently reordering
+    // t()'s positional arguments in the rendered string.
+    const contents = (entry?: Entry): Record<string, string> =>
+      Object.fromEntries(
+        Object.entries(entry?.placeholders ?? {}).map(([name, placeholder]) => [
+          name,
+          placeholder.content,
+        ]),
       );
+    for (const [key, entry] of Object.entries(CATALOGUE)) {
+      expect(contents(spanish[key]), key).toEqual(contents(entry));
     }
   });
 
@@ -116,5 +125,38 @@ describe('the Spanish catalogue', () => {
 
   it('keeps the highlight tool name out of the swatch title', () => {
     expect(spanish.swatchTitle?.message).not.toContain('Resaltar');
+  });
+});
+
+describe('conformance with chrome.i18n that the node fallback does not itself enforce', () => {
+  // substitute() in src/core/i18n.ts takes a placeholder's argument index from
+  // `content.slice(1)`, which only works if content is exactly $1..$9; Chrome
+  // permits arbitrary content (a constant, or "$1 (example)") and would
+  // render it correctly where our fallback would not. Separately, Chrome
+  // treats $$ as an escape for a literal $, which our fallback does not
+  // implement. Neither is reachable through today's catalogues, but nothing
+  // stops a future entry from doing either and only breaking under vitest.
+  const catalogues: ReadonlyArray<[string, Record<string, Entry>]> = [
+    ['en', CATALOGUE],
+    ['es', es],
+  ];
+
+  it('gives every placeholder a content of exactly $1 through $9', () => {
+    for (const [locale, catalogue] of catalogues) {
+      for (const [key, entry] of Object.entries(catalogue)) {
+        for (const [name, placeholder] of Object.entries(entry.placeholders ?? {})) {
+          expect(placeholder.content, `${locale}.${key}.${name}`).toMatch(/^\$[1-9]$/);
+        }
+      }
+    }
+  });
+
+  it('uses every $ in a message as part of a $NAME$ placeholder pair', () => {
+    for (const [locale, catalogue] of catalogues) {
+      for (const [key, entry] of Object.entries(catalogue)) {
+        const withoutPlaceholders = entry.message.replace(/\$[A-Za-z0-9_]+\$/g, '');
+        expect(withoutPlaceholders, `${locale}.${key}`).not.toContain('$');
+      }
+    }
   });
 });

@@ -1,12 +1,18 @@
 import { defineConfig, type Plugin } from 'vite';
 import { cp, mkdir } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { readdirSync } from 'node:fs';
+import { basename, resolve } from 'node:path';
 
 const PDFJS_ROOT = resolve(import.meta.dirname, 'node_modules/pdfjs-dist');
 const OUT = resolve(import.meta.dirname, 'dist');
+const I18N_ROOT = resolve(import.meta.dirname, 'src/i18n');
 
-/** Extend when a catalogue is added under src/i18n. */
-const LOCALES = ['en', 'es'];
+// Derived from src/i18n rather than hand-maintained: that makes adding a
+// catalogue a one-file change (drop a new <locale>.json in place) and makes
+// silently dropping a locale from the build impossible by omission.
+const LOCALES = readdirSync(I18N_ROOT)
+  .filter((entry) => entry.endsWith('.json'))
+  .map((entry) => basename(entry, '.json'));
 
 function copyStaticAssets(): Plugin {
   return {
