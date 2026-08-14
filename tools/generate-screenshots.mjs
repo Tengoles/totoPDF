@@ -77,7 +77,7 @@ async function addHighlight(page, swatchIndex, spanIndex, expectedCount) {
 }
 
 /**
- * Arms the text box tool, clicks an empty spot on the page to create a
+ * Arms the text box tool, clicks the given viewport point to create a
  * pdf.js FreeTextEditor (AnnotationEditorLayer#pointerup, verified against
  * pdfjs-dist@6.2.108), types into it, then presses Escape twice: the first
  * Escape is caught by the editor's own keyboard manager and commits the
@@ -85,16 +85,18 @@ async function addHighlight(page, swatchIndex, spanIndex, expectedCount) {
  * the toolbar); the second Escape, now that focus has moved off the
  * contentEditable div, reaches the toolbar's window-level handler and
  * disarms the tool (src/ui/toolbar.ts bindKeyboard).
+ *
+ * x/y are viewport coordinates, not a fraction of the page: fit-width's
+ * bottom fold generally sits partway down a text.pdf-sized page, so
+ * choosing a point off a fraction of the *whole* page (as an earlier
+ * version of this script did) could land well below what is actually on
+ * screen. Once created, the box is a real page-space annotation like the
+ * highlights, so it reflows correctly when a later rail toggle rescales
+ * the page -- it only has to be visible at the moment of creation.
  */
-async function addTextBox(page, text) {
+async function addTextBox(page, x, y, text) {
   await page.getByRole('button', { name: 'Text box' }).click();
-  const box = await page.locator('.annotationEditorLayer').first().boundingBox();
-  if (!box) {
-    throw new Error('No annotation editor layer to place a text box in');
-  }
-  // Well below the two lines of text.pdf's text layer, which sit in the top
-  // ~16% of the page, so the click cannot land on an existing highlight.
-  await page.mouse.click(box.x + box.width * 0.15, box.y + box.height * 0.6);
+  await page.mouse.click(x, y);
   await page.waitForTimeout(300);
   await page.keyboard.type(text);
   await page.waitForTimeout(300);
@@ -128,6 +130,23 @@ async function toggleNotesRail(page) {
   await page.waitForTimeout(2500);
 }
 
+/**
+ * Opens the zoom preset popover (src/ui/zoom-control.ts createZoomMenu):
+ * clicking the percentage/"Fit width" readout reveals a list of 50%-200%
+ * presets plus Fit width, Fit page and Actual size. It is a plain
+ * `hidden` attribute toggle with no CSS transition, so it is on screen the
+ * instant the click handler runs; the wait below is only to let Playwright
+ * finish the click and a frame render before the capture.
+ */
+async function openZoomMenu(page) {
+  await page.locator('.zoom-readout').click();
+  await page.waitForTimeout(300);
+  const open = await page.locator('.zoom-popover').isVisible();
+  if (!open) {
+    throw new Error('Zoom popover did not open');
+  }
+}
+
 async function shoot(page, filename) {
   await page.screenshot({ path: resolve(OUT_DIR, filename) });
   console.log(`wrote docs/store/screenshots/${filename}`);
@@ -145,7 +164,20 @@ async function main() {
   await openFixture(docPage, extensionId, TEXT_FIXTURE);
   await addHighlight(docPage, 0, 0, 1); // swatch 0 (yellow) over the first line
   await addHighlight(docPage, 1, 1, 2); // swatch 1 (green) over the second line
-  await addTextBox(docPage, 'Reviewed, looks correct.');
+
+  // Anchored just under the second highlight's own on-screen position
+  // (rather than a fraction of the whole page), so it lands in the visible,
+  // still-mostly-empty part of the page instead of below the fold.
+  const secondLine = await docPage.locator('.textLayer span').nth(1).boundingBox();
+  if (!secondLine) {
+    throw new Error('No second text layer span to anchor the text box under');
+  }
+  await addTextBox(
+    docPage,
+    secondLine.x,
+    secondLine.y + secondLine.height + 30,
+    'Reviewed, looks correct.',
+  );
 
   // Both rails are open by default (no *-collapsed class on body at start).
   // Close both for a clean shot of the document itself.
@@ -158,9 +190,11 @@ async function main() {
   await toggleNotesRail(docPage);
   await shoot(docPage, '02-notes-rail.png');
 
-  // Back to both rails closed so the toolbar -- swatches, text colour and
-  // size, zoom controls -- reads clearly against the full-width document.
+  // Back to both rails closed, matching shot 1, then open the zoom preset
+  // popover so shot 4 demonstrates a real control interaction instead of
+  // repeating shot 1's toolbar verbatim.
   await toggleNotesRail(docPage);
+  await openZoomMenu(docPage);
   await shoot(docPage, '04-toolbar.png');
 
   await docPage.close();
