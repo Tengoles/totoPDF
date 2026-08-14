@@ -30,25 +30,37 @@ file and re-package.
 totoPDF - Todo Obvio, Todo Operativo
 ```
 
-**Short description** (132 character limit — this is 118)
+**Resumen del paquete** (the short summary)
+
+Not a field you fill in. The dashboard shows it read-only, resolved from the
+manifest's `description`, which is `extensionDescription` in
+`src/i18n/es.json`. To change it, edit that catalogue and re-package. Current
+value, 102 characters against the 132 limit:
 
 ```
-Lee PDFs en un visor que resalta texto y agrega cuadros de texto, escritos dentro del archivo como anotaciones reales.
+Lee PDFs, resalta texto y agrega cuadros de texto. Las anotaciones se escriben dentro del archivo PDF.
 ```
 
-**Category**
+**Categoría**
 
 ```
-Productividad
+Herramientas
 ```
 
-**Language**
+Set once for all languages, not per listing language. Chrome's current
+taxonomy has no "Productividad"; Herramientas is the closest fit for a
+document tool.
+
+**Idioma**
 
 ```
-Español (Latinoamérica)
+español – es
 ```
 
-**Detailed description**
+**Descripción** — the detailed description
+
+The main body, 16,000 character limit. Do NOT paste the summary here; the
+dashboard already shows that separately, directly above this field.
 
 ```
 totoPDF abre los PDF en su propio visor para que puedas resaltar texto y
@@ -133,19 +145,17 @@ it does not change the extension or require a new package.
 totoPDF - Highlight and Annotate PDFs
 ```
 
-**Short description** (132 character limit — this is 114)
+**Resumen del paquete** — read-only, from `extensionDescription` in
+`src/i18n/en.json`:
 
 ```
-Read PDFs in a viewer that highlights text and adds text boxes, written into the PDF file as real PDF annotations.
+Read PDFs, highlight text, and add text boxes. Annotations are written into the PDF file.
 ```
 
-**Category**
+Category is global and already set to Herramientas; it is not repeated per
+language.
 
-```
-Productivity
-```
-
-**Detailed description**
+**Descripción** — the detailed description
 
 ```
 totoPDF opens PDFs in its own viewer so you can highlight text and add text
@@ -317,8 +327,12 @@ listing languages.
 ## Assets
 
 - Icon: `public/icons/icon128.png` (the store shows the 128).
-- Screenshots: `docs/store/screenshots/`, four files, each exactly 1280×800.
-  They show the English interface; the store does not require screenshots per
+- Screenshots: `docs/store/screenshots/`, four files, each exactly 1280×800,
+  24-bit RGB with no alpha channel — which is what the dashboard requires
+  ("PNG de 24 bits (no alfa)"). Verified from the PNG headers: colour type 2,
+  bit depth 8. Regenerating them is fine as long as that holds; a Playwright
+  screenshot taken with `omitBackground` would produce RGBA and be rejected.
+  They show the English interface. The store does not require screenshots per
   listing language, and the interface differs only in its labels.
 - Small promo tile (440×280): not produced. It is optional, and is only used
   if the extension is featured.
