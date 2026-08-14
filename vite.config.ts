@@ -47,6 +47,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         viewer: resolve(import.meta.dirname, 'viewer.html'),
+        welcome: resolve(import.meta.dirname, 'welcome.html'),
         background: resolve(import.meta.dirname, 'src/background/index.ts'),
       },
       output: {

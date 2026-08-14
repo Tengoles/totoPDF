@@ -119,5 +119,13 @@
 
   "unsavedSwitchWarning": {
     "message": "Este documento tiene anotaciones sin guardar, y abrir otro documento las descarta. Cancela, presiona Ctrl+S para escribirlas en el archivo y después abre el otro documento."
-  }
+  },
+
+  "welcomeTitle": { "message": "totoPDF está instalado" },
+  "welcomeIntro": { "message": "totoPDF abre los PDF en su propio visor para que puedas resaltar texto y agregar cuadros de texto. Lo que agregas se escribe dentro del archivo PDF, como anotaciones PDF estándar, así que otros lectores también las ven." },
+  "welcomeLocalHeading": { "message": "Falta un paso para los PDF de tu computadora" },
+  "welcomeLocalBody": { "message": "Chrome no deja que ninguna extensión lea archivos de tu disco hasta que lo permitas, y una extensión no puede activarlo por su cuenta. Abre la página de extensiones de totoPDF y activa \"Permitir acceso a URL de archivo\"." },
+  "welcomeOpenExtensionsPage": { "message": "Abrir la página de extensiones de totoPDF" },
+  "welcomeUsageHeading": { "message": "Cómo abrir un PDF" },
+  "welcomeUsageBody": { "message": "Con el acceso a archivos activado, los PDF locales se abren en totoPDF automáticamente. Para cualquier otro PDF, haz clic derecho y elige \"Abrir en totoPDF\", o haz clic en el icono de totoPDF en la barra mientras el PDF está abierto." }
 }

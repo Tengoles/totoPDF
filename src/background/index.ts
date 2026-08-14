@@ -5,9 +5,14 @@ import { allowNativeViewerOnce, installInterception } from './interception';
 // listeners that were not registered during the worker's synchronous startup.
 registerMenuHandlers();
 
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener((details) => {
   void installInterception();
   installContextMenu();
+  // Only a first install. 'update' and 'chrome_update' would reopen this on
+  // every release, which is the behaviour everyone hates.
+  if (details.reason === 'install') {
+    void chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') });
+  }
 });
 
 chrome.runtime.onStartup.addListener(() => {

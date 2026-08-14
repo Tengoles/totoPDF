@@ -117,5 +117,13 @@
 
   "unsavedSwitchWarning": {
     "message": "This document has unsaved annotations, and opening another document discards them. Cancel, press Ctrl+S to write them into the file, then open the other document."
-  }
+  },
+
+  "welcomeTitle": { "message": "totoPDF is installed" },
+  "welcomeIntro": { "message": "totoPDF opens PDFs in its own viewer so you can highlight text and add text boxes. What you add is written into the PDF file itself, as standard PDF annotations, so other readers see it too." },
+  "welcomeLocalHeading": { "message": "One step is needed for PDFs on your own computer" },
+  "welcomeLocalBody": { "message": "Chrome does not let any extension read files from your disk until you allow it, and an extension cannot turn that on for itself. Open totoPDF's extensions page, then turn on \"Allow access to file URLs\"." },
+  "welcomeOpenExtensionsPage": { "message": "Open totoPDF's extensions page" },
+  "welcomeUsageHeading": { "message": "Opening a PDF" },
+  "welcomeUsageBody": { "message": "Once file access is on, local PDFs open in totoPDF automatically. For any other PDF, right-click it and choose \"Open in totoPDF\", or click the totoPDF icon in the toolbar while the PDF is open." }
 }
