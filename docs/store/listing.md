@@ -4,14 +4,133 @@ Every field the developer dashboard asks for, written out so submission is
 copy-and-paste rather than composition under pressure. Keep this file in step
 with what is actually submitted.
 
+**Spanish is the primary listing language.** `default_locale` in the manifest
+is `es`, so the title the store displays comes from the Spanish catalogue, and
+any browser in neither Spanish nor English falls back to Spanish.
+
+Two audiences, two languages, deliberately:
+
+- **Store listing tab** is read by users. Spanish primary, English added as a
+  second listing language.
+- **Privacy tab** — the single-purpose statement and permission
+  justifications — is read by Google's review team, not by users. Those stay
+  in English, which is the safest language for review.
+
 ---
 
-## Store listing tab
+## Store listing tab — Spanish (primary)
 
 **Extension name**
 
+Not editable in the dashboard. It comes from the manifest, which resolves
+`__MSG_extensionName__` against `src/i18n/es.json`. To change it, edit that
+file and re-package.
+
 ```
-totoPDF
+totoPDF - Todo Obvio, Todo Operativo
+```
+
+**Short description** (132 character limit — this is 118)
+
+```
+Lee PDFs en un visor que resalta texto y agrega cuadros de texto, escritos dentro del archivo como anotaciones reales.
+```
+
+**Category**
+
+```
+Productividad
+```
+
+**Language**
+
+```
+Español (Latinoamérica)
+```
+
+**Detailed description**
+
+```
+totoPDF abre los PDF en su propio visor para que puedas resaltar texto y
+agregar cuadros de texto, y después escribe lo que agregaste dentro del
+archivo PDF.
+
+Eso último es lo importante. Las anotaciones se guardan como objetos de
+anotación PDF estándar, agregados al archivo como una actualización
+incremental en lugar de una reescritura. Los bytes originales quedan
+intactos y los objetos nuevos se agregan encima. Abre el mismo archivo en
+Chrome, Edge o cualquier otro lector de PDF y los resaltados y los cuadros de
+texto están ahí, porque son contenido PDF real y no algo que solo totoPDF
+entiende.
+
+Cómo abrir un PDF
+- Los PDF de tu computadora se abren en totoPDF automáticamente, una vez que
+  actives "Permitir acceso a URL de archivo" en la tarjeta de totoPDF en
+  chrome://extensions. Chrome exige que actives ese permiso a mano; una
+  extensión no puede activarlo por su cuenta.
+- Cualquier PDF, local o de la web: haz clic derecho y elige "Abrir en
+  totoPDF", o haz clic en el icono de totoPDF en la barra mientras el PDF
+  está abierto.
+- Arrastra un PDF a una pestaña de totoPDF que ya esté abierta.
+
+Anotar
+- Resalta texto con una paleta de cinco colores. Con la herramienta de
+  resaltado activa, las teclas 1 a 5 cambian el color. Haz clic derecho en un
+  color para cambiarlo por el que quieras; la paleta se recuerda entre
+  sesiones.
+- Agrega un cuadro de texto en cualquier parte de una página, con su propio
+  color y un tamaño de fuente de 6 a 96.
+- Un panel de Notas lista todos los resaltados y cuadros de texto del
+  documento, incluidos los guardados en una sesión anterior. Haz clic en una
+  entrada para ir a su página.
+- El panel de Páginas muestra miniaturas, con navegación entre páginas y zoom
+  desde la barra o el teclado.
+
+Guardar
+- La primera vez que guardas, totoPDF pregunta dónde escribir el archivo.
+  Después de eso recuerda el archivo y escribe ahí.
+- Una vez que un documento se guardó al menos una vez, las anotaciones
+  siguientes se escriben solas dos segundos después de que dejas de editar, y
+  un indicador al lado del botón Guardar dice si tu trabajo está en el
+  archivo.
+- totoPDF te avisa antes de cerrar una pestaña con anotaciones sin guardar.
+
+Lo que conviene saber antes de instalarlo
+- Los PDF cifrados se abren en modo lectura. Guardar uno exigiría cifrar
+  también las anotaciones agregadas, y en lugar de devolverte un archivo que
+  parece guardado pero está corrupto, totoPDF desactiva el guardado y explica
+  por qué.
+- Las páginas escaneadas sin capa de texto no se pueden resaltar, porque la
+  herramienta de resaltado se ancla al texto y ahí no hay. Los cuadros de
+  texto sí funcionan en esas páginas. totoPDF no hace OCR.
+- Cada guardado agrega una revisión en lugar de reescribir el archivo, que es
+  justamente lo que lo hace no destructivo, y eso significa que el archivo
+  crece a medida que trabajas. Nada elimina las revisiones viejas.
+- Los cuadros de texto usan la única fuente que trae el visor. El color y el
+  tamaño se pueden cambiar; la fuente no.
+
+Privacidad
+totoPDF no tiene servidor propio y no envía nada a ninguna parte. La única
+petición de red que hace es descargar el PDF que abres, desde la dirección
+desde la que lo abriste. No tiene analíticas ni rastreo de ningún tipo. Tus
+documentos nunca salen de tu computadora. La configuración, las referencias a
+archivos y el registro de recuperación se guardan localmente en el navegador y
+nunca se transmiten.
+
+La interfaz está en español e inglés y sigue el idioma de tu navegador.
+```
+
+---
+
+## Store listing tab — English (add as a second language)
+
+Added from the same dashboard, under the listing's language selector. Adding
+it does not change the extension or require a new package.
+
+**Extension name** — resolved from `src/i18n/en.json`:
+
+```
+totoPDF - Highlight and Annotate PDFs
 ```
 
 **Short description** (132 character limit — this is 114)
@@ -25,16 +144,6 @@ Read PDFs in a viewer that highlights text and adds text boxes, written into the
 ```
 Productivity
 ```
-
-**Language**
-
-```
-English
-```
-
-The extension's interface ships in English and Spanish and follows the
-browser's language. The listing itself is English; a Spanish listing can be
-added later from the same dashboard without changing the extension.
 
 **Detailed description**
 
@@ -58,9 +167,9 @@ Opening a PDF
 - Drag a PDF onto an open totoPDF tab.
 
 Annotating
-- Highlight text with a five-colour palette. Keys 1 to 5 switch colour. Right-
-  click a swatch to change that colour to anything you like; the palette is
-  remembered between sessions.
+- Highlight text with a five-colour palette. With the highlight tool armed,
+  keys 1 to 5 switch colour. Right-click a swatch to change that colour to anything you
+  like; the palette is remembered between sessions.
 - Add a text box anywhere on a page, with its own colour and a font size from
   6 to 96.
 - A Notes rail lists every highlight and text box in the document, including
@@ -74,8 +183,7 @@ Saving
 - Once a document has been saved once, further annotations are written
   automatically two seconds after you stop editing, and a readout next to the
   Save button says whether your work is in the file.
-- A crash-recovery journal records unsaved annotations as you make them, so an
-  unexpected tab close does not lose them.
+- totoPDF warns you before closing a tab with unsaved annotations.
 
 Worth knowing before you install
 - Encrypted PDFs open read-only. Saving one would require encrypting the
@@ -104,6 +212,8 @@ language.
 ---
 
 ## Privacy tab
+
+Read by Google's review team rather than by users, so these stay in English.
 
 **Single purpose description**
 
@@ -195,15 +305,12 @@ about. There is no server to collect it to.
 
 **Privacy policy URL**
 
-`PRIVACY.md` in the repository root. Paste its public URL, which will look
-like:
-
 ```
-https://github.com/<owner>/<repo>/blob/main/PRIVACY.md
+https://github.com/Tengoles/totoPDF/blob/main/PRIVACY.md
 ```
 
-The dashboard requires a reachable URL, so the repository must be public
-before submitting, or the policy must be hosted somewhere else that is.
+`PRIVACY.md` is bilingual, Spanish first then English, so one URL serves both
+listing languages.
 
 ---
 
@@ -211,6 +318,8 @@ before submitting, or the policy must be hosted somewhere else that is.
 
 - Icon: `public/icons/icon128.png` (the store shows the 128).
 - Screenshots: `docs/store/screenshots/`, four files, each exactly 1280×800.
+  They show the English interface; the store does not require screenshots per
+  listing language, and the interface differs only in its labels.
 - Small promo tile (440×280): not produced. It is optional, and is only used
   if the extension is featured.
 
@@ -218,13 +327,12 @@ before submitting, or the policy must be hosted somewhere else that is.
 
 ## Before you submit
 
-1. The repository must be public if the privacy policy URL points at it.
-2. Bump the version in **both** `public/manifest.json` and `package.json` —
+1. Bump the version in **both** `public/manifest.json` and `package.json` —
    a test enforces that they match, and the store refuses a re-upload whose
    version did not increase.
-3. `npm run package`, then upload the resulting zip.
-4. Registering as a Chrome Web Store developer costs a one-time $5 fee. The
+2. `npm run package`, then upload the resulting zip.
+3. Registering as a Chrome Web Store developer costs a one-time $5 fee. The
    extension itself is free to publish and free to install.
-5. Expect the `<all_urls>` host permission to draw the closest review
+4. Expect the `<all_urls>` host permission to draw the closest review
    scrutiny. The justification above is the honest account of why it is
    needed; do not narrow the claim to sound smaller than it is.
