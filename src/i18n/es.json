@@ -1,5 +1,6 @@
 {
   "extensionName": { "message": "totoPDF" },
+  "uiLanguage": { "message": "es" },
   "extensionDescription": {
     "message": "Lee PDFs, resalta texto y agrega cuadros de texto. Las anotaciones se escriben dentro del archivo PDF."
   },
@@ -98,7 +99,8 @@
   },
 
   "autosaveStopped": {
-    "message": "El guardado automático se detuvo para este documento. Presiona Ctrl+S para guardarlo. La escritura falló con:"
+    "message": "El guardado automático se detuvo para este documento. Presiona Ctrl+S para guardarlo. La escritura falló con: $ERROR$",
+    "placeholders": { "error": { "content": "$1" } }
   },
   "fileAccessHint": {
     "message": "Chrome no deja que las extensiones lean archivos locales hasta que lo permitas: abre chrome://extensions, busca totoPDF, activa \"Permitir acceso a URL de archivo\" y vuelve a cargar esta página."

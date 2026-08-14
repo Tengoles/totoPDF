@@ -12,6 +12,12 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.runtime.onStartup.addListener(() => {
   void installInterception();
+  // Chrome persists context menu items across service worker restarts, so a
+  // title built from t() at install time is stuck in whatever language Chrome
+  // was in then. Changing Chrome's UI language requires a browser restart,
+  // which is exactly when onStartup fires, so rebuilding the menu here is
+  // what keeps its title in step with a language switch.
+  installContextMenu();
 });
 
 chrome.runtime.onMessage.addListener((message: { type?: string; url?: string }, _sender, respond) => {

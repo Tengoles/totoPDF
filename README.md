@@ -211,9 +211,9 @@ filing a bug that turns out to be one of these.
   strings loaded -- `scrollWidth` matched `clientWidth` at both, every toolbar
   child shared the same `top`, and no button label wrapped -- so despite
   Spanish running 15-25% longer than English, neither `es.json` nor
-  `styles.css` needed a change. pdf.js's own highlight-colour dropdown, opened
-  by selecting a highlight and clicking its colour swatch (not just read from
-  source), showed Amarillo, Verde, Azul, Rosa, Naranja, confirming
+  `styles.css` needed a change for layout. pdf.js's own highlight-colour
+  dropdown, opened by selecting a highlight and clicking its colour swatch
+  (not just read from source), showed Amarillo, Verde, Azul, Rosa, Naranja, confirming
   `paletteToHighlightColors` reaches it. One thing was not observed directly:
   a completed save through the real Save button and its native OS file
   picker, since `showSaveFilePicker()` has no one to click through it in an

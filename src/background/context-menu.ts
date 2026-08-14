@@ -14,9 +14,11 @@ function openInViewer(pdfUrl: string, tabId: number | undefined, inNewTab: boole
 
 /**
  * Creates the menu item. Menu items persist across service worker restarts, so
- * this only needs to run on install. `file:///*` patterns are included because
- * local paths the redirect rule refuses (those containing '&') reach totoPDF
- * only through this route.
+ * this normally only needs to run on install -- but see index.ts's onStartup
+ * listener, which also calls this to refresh a title left stale by a Chrome
+ * UI language change. `file:///*` patterns are included because local paths
+ * the redirect rule refuses (those containing '&') reach totoPDF only through
+ * this route.
  */
 export function installContextMenu(): void {
   chrome.contextMenus.removeAll(() => {

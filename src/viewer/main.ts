@@ -31,8 +31,6 @@ const SAVE_CONFIRMATION_MS = 5000;
 /** The tab title with nothing open. */
 const APP_TITLE = 'totoPDF';
 
-const AUTOSAVE_STOPPED = t('autosaveStopped');
-
 const FILE_ACCESS_HINT = t('fileAccessHint');
 
 function describeError(error: unknown): string {
@@ -239,7 +237,7 @@ async function start(
     // Once per document, and autosave is off for it from here. Saying it once
     // and naming the way out beats a banner every two seconds that still does
     // not save the file.
-    showBanner(document.body, `${AUTOSAVE_STOPPED} ${describeError(error)}`, 'error');
+    showBanner(document.body, t('autosaveStopped', describeError(error)), 'error');
   });
   const presentThumbnails = createThumbnailWiring(host);
   const refreshAnnotationRail = createAnnotationRailWiring(host, controller);
@@ -263,8 +261,13 @@ async function start(
 }
 
 async function main(): Promise<void> {
-  // viewer.html ships lang="en"; a screen reader needs the real one.
-  document.documentElement.lang = chrome.i18n.getUILanguage();
+  // viewer.html ships lang="en". chrome.i18n.getUILanguage() reports Chrome's
+  // UI language, which is NOT necessarily the language of the catalogue Chrome
+  // resolved -- only en and es ship, so a browser set to e.g. French still
+  // gets the English catalogue rendered, and the lang attribute must say so
+  // for a screen reader to use the right phonetics. uiLanguage is the
+  // catalogue's own declaration of what language it is.
+  document.documentElement.lang = t('uiLanguage');
   const toolbarRoot = document.querySelector<HTMLElement>('#toolbar');
   const container = document.querySelector<HTMLDivElement>('#viewer-container');
   const viewerDiv = document.querySelector<HTMLDivElement>('#viewer-inner');

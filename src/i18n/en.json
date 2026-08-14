@@ -1,5 +1,6 @@
 {
   "extensionName": { "message": "totoPDF" },
+  "uiLanguage": { "message": "en" },
   "extensionDescription": {
     "message": "Read PDFs, highlight text, and add text boxes. Annotations are written into the PDF file."
   },
@@ -96,7 +97,8 @@
   },
 
   "autosaveStopped": {
-    "message": "Automatic saving stopped for this document. Press Ctrl+S to save it. The write failed with:"
+    "message": "Automatic saving stopped for this document. Press Ctrl+S to save it. The write failed with: $ERROR$",
+    "placeholders": { "error": { "content": "$1" } }
   },
   "fileAccessHint": {
     "message": "Chrome blocks extensions from reading local files until you allow it: open chrome://extensions, find totoPDF, turn on \"Allow access to file URLs\", then reload this page."
