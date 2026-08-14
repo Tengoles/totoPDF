@@ -1,3 +1,5 @@
+import { t } from '../core/i18n';
+
 /**
  * The toolbar's one-word answer to "is my work in the file?". Declared here
  * rather than in the viewer for the same reason ZoomController is: the control
@@ -32,16 +34,16 @@ export interface SaveStatusSource {
  */
 const LABELS: Record<SaveStatus, string> = {
   none: '',
-  unsaved: 'Unsaved changes',
-  saving: 'Saving',
-  saved: 'Saved',
+  unsaved: t('saveStatusUnsaved'),
+  saving: t('saveStatusSaving'),
+  saved: t('saveStatusSaved'),
 };
 
 const TITLES: Record<SaveStatus, string> = {
   none: '',
-  unsaved: 'These annotations are not in the PDF file yet. Press Ctrl+S to write them.',
-  saving: 'Writing annotations into the PDF file.',
-  saved: 'Every annotation is written into the PDF file.',
+  unsaved: t('saveStatusUnsavedTitle'),
+  saving: t('saveStatusSavingTitle'),
+  saved: t('saveStatusSavedTitle'),
 };
 
 export function createSaveStatusReadout(

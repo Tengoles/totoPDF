@@ -1,3 +1,5 @@
+import { t } from '../core/i18n';
+
 /**
  * The zoom logic that does not need a browser: the preset list, the readout
  * label, the bounds and the keyboard mapping. No DOM and no pdf.js import, so
@@ -53,9 +55,9 @@ export interface ZoomPreset {
 
 /** The values that name a mode instead of a number, and what to call them. */
 const FIT_LABELS = new Map<string, string>([
-  ['page-width', 'Fit width'],
-  ['page-fit', 'Fit page'],
-  ['page-actual', 'Actual size'],
+  ['page-width', t('zoomFitWidth')],
+  ['page-fit', t('zoomFitPage')],
+  ['page-actual', t('zoomActualSize')],
 ]);
 
 const PERCENT_PRESETS = [0.5, 0.75, 1, 1.25, 1.5, 2];

@@ -1,4 +1,10 @@
 import type { RailItem } from '../core/annotation-index';
+import { t } from '../core/i18n';
+
+const KIND_LABELS: Record<RailItem['kind'], string> = {
+  highlight: t('railKindHighlight'),
+  textbox: t('railKindTextbox'),
+};
 
 /**
  * Renders the page-ordered list of highlights and text boxes. Pure DOM
@@ -14,13 +20,13 @@ export function renderAnnotationRail(
   root.replaceChildren();
 
   const heading = document.createElement('h2');
-  heading.textContent = `Annotations (${items.length})`;
+  heading.textContent = t('railHeading', String(items.length));
   root.append(heading);
 
   if (items.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'rail-empty';
-    empty.textContent = 'Highlights and text boxes you add will be listed here.';
+    empty.textContent = t('railEmpty');
     root.append(empty);
     return;
   }
@@ -31,7 +37,7 @@ export function renderAnnotationRail(
     const jump = document.createElement('button');
     jump.type = 'button';
     jump.style.borderLeftColor = item.color;
-    jump.textContent = `p.${item.pageNumber}  ${item.excerpt || item.kind}`;
+    jump.textContent = t('railEntry', String(item.pageNumber), item.excerpt || KIND_LABELS[item.kind]);
     jump.addEventListener('click', () => onJump(item));
     entry.append(jump);
     list.append(entry);

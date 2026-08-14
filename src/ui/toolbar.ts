@@ -1,4 +1,5 @@
 import type { AnnotationBridge, ToolMode } from '../core/annotation-bridge';
+import { t } from '../core/i18n';
 import type { PageController } from './page-nav';
 import { createPageNavControls } from './page-nav-control';
 import { createHighlightControls, type HighlightControlOptions } from './palette';
@@ -49,8 +50,8 @@ interface RailToggles {
 }
 
 function createRailToggles(): RailToggles {
-  const pages = button('Pages', 'Show or hide the page thumbnail rail.');
-  const notes = button('Notes', 'Show or hide the annotation rail.');
+  const pages = button(t('toolbarPages'), t('toolbarPagesTitle'));
+  const notes = button(t('toolbarNotes'), t('toolbarNotesTitle'));
   pages.addEventListener('click', () => document.body.classList.toggle('thumbs-collapsed'));
   notes.addEventListener('click', () => document.body.classList.toggle('notes-collapsed'));
   return { pages, notes };
@@ -136,10 +137,10 @@ interface ToolButtons {
 }
 
 function createToolButtons(canHighlight: boolean, canSave: boolean): ToolButtons {
-  const highlight = button('Highlight', 'Highlight selected text. Keys 1-5 change colour.');
-  const textbox = button('Text box', 'Drag a box on the page and type inside it.');
-  const save = button('Save', 'Write annotations into the PDF file (Ctrl+S).');
-  const openInChrome = button('Open in Chrome', "Open this file in Chrome's built-in PDF viewer.");
+  const highlight = button(t('toolbarHighlight'), t('toolbarHighlightTitle'));
+  const textbox = button(t('toolbarTextBox'), t('toolbarTextBoxTitle'));
+  const save = button(t('toolbarSave'), t('toolbarSaveTitle'));
+  const openInChrome = button(t('toolbarOpenInChrome'), t('toolbarOpenInChromeTitle'));
   highlight.disabled = !canHighlight;
   save.disabled = !canSave;
   return { highlight, textbox, save, openInChrome };

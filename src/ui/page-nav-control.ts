@@ -1,3 +1,4 @@
+import { t } from '../core/i18n';
 import { formatPageTotal, type PageController, type PageState, parsePageInput } from './page-nav';
 
 /**
@@ -7,17 +8,15 @@ import { formatPageTotal, type PageController, type PageState, parsePageInput } 
  * with the toolbar that created it.
  */
 
-const INPUT_TITLE = 'Page being shown. Type a page number and press Enter to go to it.';
-
 function createPageInput(): HTMLInputElement {
   const input = document.createElement('input');
   input.type = 'number';
   input.className = 'page-input';
   input.min = '1';
   input.step = '1';
-  input.title = INPUT_TITLE;
+  input.title = t('pageInputTitle');
   // The box has no visible caption, so it states its own name.
-  input.setAttribute('aria-label', 'Page number');
+  input.setAttribute('aria-label', t('pageInputLabel'));
   return input;
 }
 

@@ -1,3 +1,5 @@
+import { t } from '../core/i18n';
+
 /**
  * The page-navigation logic that does not need a browser: what a typed page
  * entry means, and the contract the control reads the position back through.
@@ -58,5 +60,5 @@ export function parsePageInput(raw: string, pageCount: number): number | null {
 
 /** The count beside the box. Says what the number is, not just a bare total. */
 export function formatPageTotal(pageCount: number): string {
-  return `of ${pageCount}`;
+  return t('pageTotal', String(pageCount));
 }

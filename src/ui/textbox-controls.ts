@@ -1,4 +1,5 @@
 import type { AnnotationBridge } from '../core/annotation-bridge';
+import { t } from '../core/i18n';
 
 /**
  * The text box tool's colour and size fields. Extracted from toolbar.ts when
@@ -34,7 +35,7 @@ export function createTextBoxControls(options: TextBoxControlOptions): HTMLEleme
   const color = document.createElement('input');
   color.type = 'color';
   color.value = options.freeTextColor;
-  color.title = 'Colour of the text in a text box.';
+  color.title = t('textColorTitle');
   color.addEventListener('input', () => {
     bridge.setFreeTextColor(color.value);
     onTextColorChange(color.value);
@@ -46,7 +47,7 @@ export function createTextBoxControls(options: TextBoxControlOptions): HTMLEleme
   size.max = String(MAX_TEXT_SIZE);
   size.step = '1';
   size.value = String(options.freeTextSize);
-  size.title = `Font size of text in a text box, ${MIN_TEXT_SIZE} to ${MAX_TEXT_SIZE}.`;
+  size.title = t('textSizeTitle', String(MIN_TEXT_SIZE), String(MAX_TEXT_SIZE));
   size.addEventListener('input', () => {
     const value = Number(size.value);
     // A half-typed or out-of-range entry is ignored rather than clamped:
@@ -58,5 +59,5 @@ export function createTextBoxControls(options: TextBoxControlOptions): HTMLEleme
     onTextSizeChange(value);
   });
 
-  return [labeled('Text colour', color), labeled('Text size', size)];
+  return [labeled(t('textColorLabel'), color), labeled(t('textSizeLabel'), size)];
 }

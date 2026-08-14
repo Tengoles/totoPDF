@@ -1,3 +1,4 @@
+import { t } from '../core/i18n';
 import { bindPopoverDismiss } from './popover';
 import {
   canZoomIn,
@@ -53,7 +54,7 @@ function createZoomMenu(zoom: ZoomController, signal: AbortSignal): ZoomMenu {
   const readout = document.createElement('button');
   readout.type = 'button';
   readout.className = 'zoom-readout';
-  readout.title = 'Current zoom level. Opens the list of zoom levels.';
+  readout.title = t('zoomReadoutTitle');
   readout.setAttribute('aria-expanded', 'false');
 
   const popover = document.createElement('div');
@@ -84,8 +85,8 @@ function createZoomMenu(zoom: ZoomController, signal: AbortSignal): ZoomMenu {
 }
 
 export function createZoomControls(zoom: ZoomController, signal: AbortSignal): HTMLElement {
-  const out = stepButton('−', 'Zoom out (Ctrl and minus).', () => zoom.zoomOut());
-  const into = stepButton('+', 'Zoom in (Ctrl and plus).', () => zoom.zoomIn());
+  const out = stepButton('−', t('zoomOutTitle'), () => zoom.zoomOut());
+  const into = stepButton('+', t('zoomInTitle'), () => zoom.zoomIn());
   const menu = createZoomMenu(zoom, signal);
 
   function sync(state: ZoomState): void {
