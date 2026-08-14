@@ -34,7 +34,7 @@
         "assets/*",
         "chunks/*"
       ],
-      "matches": ["<all_urls>"]
+      "matches": ["file:///*"]
     }
   ]
 }
