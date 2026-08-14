@@ -1,0 +1,121 @@
+{
+  "extensionName": { "message": "totoPDF" },
+  "extensionDescription": {
+    "message": "Lee PDFs, resalta texto y agrega cuadros de texto. Las anotaciones se escriben dentro del archivo PDF."
+  },
+  "actionTitle": { "message": "Abrir este PDF en totoPDF" },
+  "contextMenuOpen": { "message": "Abrir en totoPDF" },
+
+  "toolbarPages": { "message": "Páginas" },
+  "toolbarPagesTitle": { "message": "Mostrar u ocultar el panel de miniaturas." },
+  "toolbarNotes": { "message": "Notas" },
+  "toolbarNotesTitle": { "message": "Mostrar u ocultar el panel de anotaciones." },
+  "toolbarHighlight": { "message": "Resaltar" },
+  "toolbarHighlightTitle": {
+    "message": "Resalta el texto seleccionado. Las teclas 1-5 cambian el color."
+  },
+  "toolbarTextBox": { "message": "Cuadro de texto" },
+  "toolbarTextBoxTitle": { "message": "Arrastra un cuadro sobre la página y escribe adentro." },
+  "toolbarSave": { "message": "Guardar" },
+  "toolbarSaveTitle": { "message": "Escribe las anotaciones en el archivo PDF (Ctrl+S)." },
+  "toolbarOpenInChrome": { "message": "Abrir en Chrome" },
+  "toolbarOpenInChromeTitle": { "message": "Abre este archivo en el visor de PDF de Chrome." },
+
+  "paletteYellow": { "message": "Amarillo" },
+  "paletteGreen": { "message": "Verde" },
+  "paletteBlue": { "message": "Azul" },
+  "palettePink": { "message": "Rosa" },
+  "paletteOrange": { "message": "Naranja" },
+  "swatchTitle": {
+    "message": "$NAME$ (tecla $KEY$). Haz clic para usarlo, clic derecho para cambiar este color.",
+    "placeholders": { "name": { "content": "$1" }, "key": { "content": "$2" } }
+  },
+  "swatchColorInputLabel": {
+    "message": "Nuevo color para el recuadro $NAME$ (tecla $KEY$).",
+    "placeholders": { "name": { "content": "$1" }, "key": { "content": "$2" } }
+  },
+
+  "textColorLabel": { "message": "Color del texto" },
+  "textColorTitle": { "message": "Color del texto dentro de un cuadro de texto." },
+  "textSizeLabel": { "message": "Tamaño" },
+  "textSizeTitle": {
+    "message": "Tamaño de la fuente en un cuadro de texto, de $MIN$ a $MAX$.",
+    "placeholders": { "min": { "content": "$1" }, "max": { "content": "$2" } }
+  },
+
+  "zoomOutTitle": { "message": "Alejar (Ctrl y menos)." },
+  "zoomInTitle": { "message": "Acercar (Ctrl y más)." },
+  "zoomReadoutTitle": { "message": "Nivel de zoom actual. Abre la lista de niveles." },
+  "zoomFitWidth": { "message": "Ajustar al ancho" },
+  "zoomFitPage": { "message": "Ajustar a la página" },
+  "zoomActualSize": { "message": "Tamaño real" },
+
+  "pageInputTitle": {
+    "message": "Página que se está viendo. Escribe un número de página y presiona Enter para ir a ella."
+  },
+  "pageInputLabel": { "message": "Número de página" },
+  "pageTotal": {
+    "message": "de $COUNT$",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+
+  "saveStatusUnsaved": { "message": "Sin guardar" },
+  "saveStatusSaving": { "message": "Guardando" },
+  "saveStatusSaved": { "message": "Guardado" },
+  "saveStatusUnsavedTitle": {
+    "message": "Estas anotaciones todavía no están en el archivo PDF. Presiona Ctrl+S para escribirlas."
+  },
+  "saveStatusSavingTitle": { "message": "Escribiendo las anotaciones en el archivo PDF." },
+  "saveStatusSavedTitle": { "message": "Todas las anotaciones están escritas en el archivo PDF." },
+
+  "railHeading": {
+    "message": "Anotaciones ($COUNT$)",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "railEmpty": { "message": "Los resaltados y los cuadros de texto que agregues aparecerán acá." },
+  "railEntry": {
+    "message": "p.$PAGE$  $TEXT$",
+    "placeholders": { "page": { "content": "$1" }, "text": { "content": "$2" } }
+  },
+  "railKindHighlight": { "message": "resaltado" },
+  "railKindTextbox": { "message": "cuadro de texto" },
+
+  "capabilityEncrypted": {
+    "message": "Este PDF está cifrado. totoPDF puede mostrarlo, pero no puede guardarle cambios."
+  },
+  "capabilityNoText": {
+    "message": "Este PDF no tiene texto seleccionable, así que no se puede resaltar. Los cuadros de texto sí funcionan."
+  },
+
+  "loadFailedHttp": {
+    "message": "No se pudo cargar $URL$ (HTTP $STATUS$)",
+    "placeholders": { "url": { "content": "$1" }, "status": { "content": "$2" } }
+  },
+
+  "saveStillOpening": { "message": "Espera a que el documento termine de abrirse y guarda después." },
+  "savePermissionDenied": {
+    "message": "Se denegó el permiso de escritura. Elige el archivo de nuevo para guardar."
+  },
+
+  "autosaveStopped": {
+    "message": "El guardado automático se detuvo para este documento. Presiona Ctrl+S para guardarlo. La escritura falló con:"
+  },
+  "fileAccessHint": {
+    "message": "Chrome no deja que las extensiones lean archivos locales hasta que lo permitas: abre chrome://extensions, busca totoPDF, activa \"Permitir acceso a URLs de archivo\" y vuelve a cargar esta página."
+  },
+  "loadingOpening": { "message": "Abriendo el documento" },
+  "loadingSaving": { "message": "Escribiendo las anotaciones en el archivo PDF" },
+  "saveConfirmed": { "message": "Anotaciones escritas en el archivo PDF." },
+  "settingsSaveFailed": {
+    "message": "No se pudo guardar la configuración. $ERROR$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "startupFailed": {
+    "message": "totoPDF no pudo iniciarse. $ERROR$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+
+  "unsavedSwitchWarning": {
+    "message": "Este documento tiene anotaciones sin guardar, y abrir otro documento las descarta. Cancela, presiona Ctrl+S para escribirlas en el archivo y después abre el otro documento."
+  }
+}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import en from '../../src/i18n/en.json';
+import es from '../../src/i18n/es.json';
 import { t } from '../../src/core/i18n';
 
 type Entry = { message: string; placeholders?: Record<string, { content: string }> };
@@ -71,5 +72,49 @@ describe('t', () => {
 
   it('leaves a placeholder in place when no argument is supplied', () => {
     expect(t('pageTotal')).toBe('of ');
+  });
+});
+
+describe('the Spanish catalogue', () => {
+  const spanish: Record<string, Entry> = es;
+
+  it('has exactly the English key set', () => {
+    expect(Object.keys(spanish).sort()).toEqual(Object.keys(CATALOGUE).sort());
+  });
+
+  it('declares the same placeholders as the English message', () => {
+    for (const [key, entry] of Object.entries(CATALOGUE)) {
+      expect(Object.keys(spanish[key]?.placeholders ?? {}).sort(), key).toEqual(
+        Object.keys(entry.placeholders ?? {}).sort(),
+      );
+    }
+  });
+
+  it('declares every placeholder its messages reference', () => {
+    for (const [key, entry] of Object.entries(spanish)) {
+      const referenced = [...entry.message.matchAll(/\$([A-Za-z0-9_]+)\$/g)].map((match) =>
+        (match[1] ?? '').toLowerCase(),
+      );
+      for (const name of referenced) {
+        expect(Object.keys(entry.placeholders ?? {}), `${key} references $${name}$`).toContain(name);
+      }
+    }
+  });
+
+  it('has no empty message', () => {
+    for (const [key, entry] of Object.entries(spanish)) {
+      expect(entry.message, key).not.toBe('');
+    }
+  });
+
+  it('keeps palette display names parseable by pdf.js', () => {
+    const names = ['paletteYellow', 'paletteGreen', 'paletteBlue', 'palettePink', 'paletteOrange'];
+    for (const key of names) {
+      expect(spanish[key]?.message, key).toMatch(/^[A-Za-z0-9 _-]+$/);
+    }
+  });
+
+  it('keeps the highlight tool name out of the swatch title', () => {
+    expect(spanish.swatchTitle?.message).not.toContain('Resaltar');
   });
 });

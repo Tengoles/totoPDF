@@ -6,7 +6,7 @@ const PDFJS_ROOT = resolve(import.meta.dirname, 'node_modules/pdfjs-dist');
 const OUT = resolve(import.meta.dirname, 'dist');
 
 /** Extend when a catalogue is added under src/i18n. */
-const LOCALES = ['en'];
+const LOCALES = ['en', 'es'];
 
 function copyStaticAssets(): Plugin {
   return {
