@@ -262,6 +262,9 @@ listing languages.
 3. Registering as a Chrome Web Store developer costs a one-time $5 fee. The
    extension itself is free to publish and free to install.
 4. The host permission is `file:///*` only, and the extension makes no
-   network requests. If review still flags broad host access, the answer is
-   that file access is what a local-file annotator needs and there is no
-   narrower form of it.
+   network requests. **Confirmed on submission, 2026-08-14: `file:///*` does
+   not trigger the "broad host permissions" warning.** With `<all_urls>` the
+   dashboard warned that the extension might need in-depth review and
+   suggested `activeTab` or specific sites; after narrowing to `file:///*`
+   that warning was gone entirely. Do not widen it back without expecting
+   that warning, and the slower review it implies, to return.
