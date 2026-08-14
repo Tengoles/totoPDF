@@ -15,10 +15,12 @@ When you save, it writes those annotations into the PDF file on your disk,
 through the browser's File System Access API — the same mechanism that shows
 you a save dialog and asks which file to write.
 
-The file never leaves your computer. totoPDF has no network code: it makes no
-requests to any server operated by this project or by anyone else, because
-there is no such server. It contains no analytics, no telemetry, no crash
-reporting, no advertising, and no tracking of any kind.
+The file never leaves your computer: totoPDF uploads nothing, and there is no
+server for it to upload to. The only network request it makes is fetching the
+PDF you asked it to open, from the address you opened it from — the same
+request Chrome would make to display that PDF itself. totoPDF contains no
+analytics, no telemetry, no crash reporting, no advertising, and no tracking
+of any kind.
 
 ## What totoPDF stores, and where
 
@@ -44,8 +46,7 @@ a crash. It is written to the browser's local database on your computer and
 is never sent anywhere.
 
 To remove all three, uninstall the extension. Chrome deletes an extension's
-`chrome.storage` and IndexedDB data when the extension is removed. You can
-also clear the settings alone from the browser's site data controls.
+`chrome.storage` and IndexedDB data when the extension is removed.
 
 ## Why totoPDF asks for access to all sites
 

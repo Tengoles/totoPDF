@@ -6,7 +6,9 @@ import { fileURLToPath } from 'node:url';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SIZES = [16, 32, 48, 128];
 
-const svg = await readFile(resolve(ROOT, 'public/icons/icon.svg'), 'utf8');
+// Source lives here in tools/, not in public/, so it does not ship in the
+// build output; the PNGs it generates below still go to public/icons/.
+const svg = await readFile(resolve(ROOT, 'tools/icon.svg'), 'utf8');
 const browser = await chromium.launch({ channel: 'chromium' });
 const page = await browser.newPage();
 

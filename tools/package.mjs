@@ -72,6 +72,11 @@ const outPath = resolve(ROOT, `totopdf-${pkg.version}.zip`);
 // order, which is not guaranteed to be stable across platforms.
 const files = walk(DIST, DIST).sort((a, b) => (a.rel < b.rel ? -1 : a.rel > b.rel ? 1 : 0));
 
+if (files.length === 0) {
+  console.error('dist/ is empty. Run `npm run build` first.');
+  process.exit(1);
+}
+
 const localChunks = [];
 const centralChunks = [];
 let offset = 0;
@@ -81,13 +86,18 @@ for (const file of files) {
   const compressed = deflateRawSync(data);
   const crc = crc32(data);
   const nameBuf = Buffer.from(file.rel, 'utf8');
+  // Bit 11 (0x0800) tells a reader the name is UTF-8; without it, a name
+  // with any non-ASCII byte must be decoded as CP437 per APPNOTE 6.3.x and
+  // would come out corrupted. All current entry names are ASCII, so this is
+  // set defensively for whatever ships later.
+  const utf8Flag = nameBuf.some((b) => b > 0x7f) ? 0x0800 : 0;
 
   // No data descriptor: sizes and CRC are known up front since the whole
   // file is already in memory, so they go straight into the local header.
   const localHeader = Buffer.concat([
     u32(LOCAL_FILE_HEADER_SIGNATURE),
     u16(VERSION_NEEDED),
-    u16(0), // general purpose bit flag
+    u16(utf8Flag), // general purpose bit flag
     u16(DEFLATE_METHOD),
     u16(0), // DOS last mod file time -- deterministic archive, no clock read
     u16(0), // DOS last mod file date
@@ -107,7 +117,7 @@ for (const file of files) {
     u32(CENTRAL_DIRECTORY_SIGNATURE),
     u16(VERSION_NEEDED), // version made by
     u16(VERSION_NEEDED), // version needed to extract
-    u16(0), // general purpose bit flag
+    u16(utf8Flag), // general purpose bit flag -- must match the local header
     u16(DEFLATE_METHOD),
     u16(0), // DOS last mod file time
     u16(0), // DOS last mod file date

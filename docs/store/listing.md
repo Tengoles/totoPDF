@@ -91,10 +91,11 @@ Worth knowing before you install
   adjustable; the font is not.
 
 Privacy
-totoPDF has no server, makes no network requests, and contains no analytics or
-tracking of any kind. Your documents never leave your computer. Settings, file
-handles and the recovery journal are stored locally by the browser and are
-never transmitted.
+totoPDF has no server of its own and sends nothing anywhere. The only network
+request it makes is fetching the PDF you open, from the address you opened it
+from. It contains no analytics or tracking of any kind. Your documents never
+leave your computer. Settings, file handles and the recovery journal are
+stored locally by the browser and are never transmitted.
 
 The interface is available in English and Spanish and follows your browser's
 language.

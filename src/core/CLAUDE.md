@@ -48,7 +48,7 @@ the colour names match `^[A-Za-z0-9 _-]+$`.
 a hand edit, or corruption. `normalizeSettings` falls back field by field and
 that is deliberate — do not replace it with a schema that throws.
 
-**Four error messages here stay in English on purpose** — the two in
+**Six error messages here stay in English on purpose** — the two in
 `file-handles.ts`, the two in `recovery-journal.ts`, and the two in
 `save-pipeline.ts`. They signal a bug rather than a user mistake, and an
 English string stays greppable in an issue. Everything a user can actually
