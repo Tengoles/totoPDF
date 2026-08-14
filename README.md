@@ -11,13 +11,14 @@ content rather than something only totoPDF understands.
 
 ## What it does
 
-- Opens a PDF from any of three places:
-  - a local (`file://`) PDF, automatically, once "Allow access to file
-    URLs" is turned on for the extension (see Setup and Limitations below);
-  - any PDF URL, local or remote, via the right-click "Open in totoPDF"
-    context menu item or by clicking the extension's toolbar icon while
-    that tab is open;
-  - a file dragged onto an already-open totoPDF tab.
+- Opens a PDF from the local disk, three ways:
+  - automatically, once "Allow access to file URLs" is turned on for the
+    extension (see Setup and Limitations below);
+  - via the right-click "Open in totoPDF" context menu item on a local PDF,
+    or by clicking the extension's toolbar icon while one is open;
+  - a file dragged onto an already-open totoPDF tab, which needs no
+    permission at all and is how a PDF from the web gets in: download it,
+    then drop it.
 - Highlight tool with a 5-colour palette; keys 1-5 switch colour while the
   tool is armed. Clicking a swatch uses that colour; right-clicking one opens
   the browser's own colour picker for it, so any of the five can be set to
@@ -115,6 +116,16 @@ Not yet published, but ready to be. Publishing a new version:
 
 These are real, current gaps, not a disclaimer template. Read them before
 filing a bug that turns out to be one of these.
+
+- **totoPDF opens local files only, on purpose.** It will not open a PDF from
+  a URL, and the manifest asks for `file:///*` rather than access to every
+  site. The point of the tool is writing annotations back into the file they
+  came from, which needs a file on disk; a remote PDF could only ever become
+  a "save as" copy, which downloading it and dragging it onto a totoPDF tab
+  already does, with no host permission involved. Removing the remote path
+  cost a shortcut and bought a much narrower permission and an extension that
+  makes no network requests at all. `parseViewerQuery` rejects anything that
+  is not a `file://` URL, deliberately.
 
 - **Local PDFs need a manual permission.** Chrome will not let an extension
   see `file://` URLs unless "Allow access to file URLs" is turned on for it

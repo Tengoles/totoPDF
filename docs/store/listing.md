@@ -69,8 +69,8 @@ Eso último es lo importante. Las anotaciones se guardan como objetos de anotaci
 
 Cómo abrir un PDF
 - Los PDF de tu computadora se abren en totoPDF automáticamente, una vez que actives "Permitir acceso a URL de archivo" en la tarjeta de totoPDF en chrome://extensions. Chrome exige que actives ese permiso a mano; una extensión no puede activarlo por su cuenta.
-- Cualquier PDF, local o de la web: haz clic derecho y elige "Abrir en totoPDF", o haz clic en el icono de totoPDF en la barra mientras el PDF está abierto.
-- Arrastra un PDF a una pestaña de totoPDF que ya esté abierta.
+- Haz clic derecho en un PDF de tu computadora y elige "Abrir en totoPDF", o haz clic en el icono de totoPDF en la barra mientras el PDF está abierto.
+- Arrastra un PDF a una pestaña de totoPDF que ya esté abierta. Así es como se anota un PDF de internet: descárgalo y arrástralo.
 
 Anotar
 - Resalta texto con una paleta de cinco colores. Con la herramienta de resaltado activa, las teclas 1 a 5 cambian el color. Haz clic derecho en un color para cambiarlo por el que quieras; la paleta se recuerda entre sesiones.
@@ -90,7 +90,7 @@ Lo que conviene saber antes de instalarlo
 - Los cuadros de texto usan la única fuente que trae el visor. El color y el tamaño se pueden cambiar; la fuente no.
 
 Privacidad
-totoPDF no tiene servidor propio y no envía nada a ninguna parte. La única petición de red que hace es descargar el PDF que abres, desde la dirección desde la que lo abriste. No tiene analíticas ni rastreo de ningún tipo. Tus documentos nunca salen de tu computadora. La configuración, las referencias a archivos y el registro de recuperación se guardan localmente en el navegador y nunca se transmiten.
+totoPDF no hace ninguna petición de red: no sube nada, no descarga nada y no tiene servidor. Solo abre archivos que ya están en tu disco, y por eso pide acceso a tus archivos y no a los sitios web. No tiene analíticas ni rastreo de ningún tipo. Tus documentos nunca salen de tu computadora. La configuración, las referencias a archivos y el registro de recuperación se guardan localmente en el navegador y nunca se transmiten.
 
 La interfaz está en español e inglés y sigue el idioma de tu navegador.
 ```
@@ -127,8 +127,8 @@ That last part is the point. Annotations are saved as standard PDF annotation ob
 
 Opening a PDF
 - Local PDFs open in totoPDF automatically, once you turn on "Allow access to file URLs" on totoPDF's chrome://extensions card. Chrome requires that switch to be set by hand; an extension cannot turn it on for itself.
-- Any PDF, local or on the web: right-click and choose "Open in totoPDF", or click the totoPDF toolbar icon while the PDF is open.
-- Drag a PDF onto an open totoPDF tab.
+- Right-click a PDF on your computer and choose "Open in totoPDF", or click the totoPDF toolbar icon while the PDF is open.
+- Drag a PDF onto an open totoPDF tab. That is how you annotate a PDF from the web: download it, then drop it in.
 
 Annotating
 - Highlight text with a five-colour palette. With the highlight tool armed, keys 1 to 5 switch colour. Right-click a swatch to change that colour to anything you like; the palette is remembered between sessions.
@@ -148,7 +148,7 @@ Worth knowing before you install
 - Text boxes use the one font the viewer provides. Colour and size are adjustable; the font is not.
 
 Privacy
-totoPDF has no server of its own and sends nothing anywhere. The only network request it makes is fetching the PDF you open, from the address you opened it from. It contains no analytics or tracking of any kind. Your documents never leave your computer. Settings, file handles and the recovery journal are stored locally by the browser and are never transmitted.
+totoPDF makes no network requests at all: it uploads nothing, downloads nothing, and has no server. It only opens files already on your disk, which is why it asks for access to your files rather than to websites. It contains no analytics or tracking of any kind. Your documents never leave your computer. Settings, file handles and the recovery journal are stored locally by the browser and are never transmitted.
 
 The interface is available in English and Spanish and follows your browser's language.
 ```
@@ -185,14 +185,12 @@ Adds one item, "Open in totoPDF", to the right-click menu on PDF links and PDF p
 Stores the user's own settings: the five highlight colours, which one is selected, and the colour and font size used for text boxes, so they persist between sessions. No document content and no browsing data is stored here.
 ```
 
-**Host permission justification** (`<all_urls>`)
+**Host permission justification** (`file:///*`)
 
 ```
-Two things need it. First, redirecting a PDF URL to totoPDF's viewer requires permission for the address being redirected, and a PDF can be at any address. Second, once the viewer is open it must fetch the PDF it was pointed at, which again can be any address.
+totoPDF opens PDFs stored on the user's own computer and writes annotations back into them. It needs file:// access to read those files, and to redirect a local PDF URL to its own viewer page.
 
-A narrower pattern was considered and does not work: PDFs are frequently served from URLs that do not end in .pdf, so a pattern-based permission would silently fail on many documents.
-
-totoPDF does not read, modify or collect the content of web pages. The only resource it fetches is a PDF the user has explicitly asked it to open.
+It requests no access to websites, and makes no network requests of any kind. A PDF from the web is handled by the user downloading it and dragging it onto a totoPDF tab, which needs no permission at all.
 ```
 
 **Remote code**
@@ -263,6 +261,7 @@ listing languages.
 2. `npm run package`, then upload the resulting zip.
 3. Registering as a Chrome Web Store developer costs a one-time $5 fee. The
    extension itself is free to publish and free to install.
-4. Expect the `<all_urls>` host permission to draw the closest review
-   scrutiny. The justification above is the honest account of why it is
-   needed; do not narrow the claim to sound smaller than it is.
+4. The host permission is `file:///*` only, and the extension makes no
+   network requests. If review still flags broad host access, the answer is
+   that file access is what a local-file annotator needs and there is no
+   narrower form of it.

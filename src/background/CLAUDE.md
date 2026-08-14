@@ -29,15 +29,20 @@ browser restart, which is exactly when a UI-language change takes effect.
 ## Permissions
 
 The manifest requests exactly `declarativeNetRequest`, `contextMenus`,
-`storage`, plus the `<all_urls>` host permission. Nothing else. That set was
-reduced for store submission and is asserted by a test.
+`storage`, plus the `file:///*` host permission. Nothing else. Both sets are
+asserted by tests, and both were narrowed deliberately for store submission.
+
+`file:///*` rather than `<all_urls>` because totoPDF opens local files only —
+`parseViewerQuery` rejects any URL that is not `file://`, so there is nothing
+for web access to do. The context menu's patterns are scoped to `file:///*`
+for the same reason: it could not open a web PDF even if it appeared there.
 
 Things that do **not** need a permission and must not cause one to be added:
 
 - `chrome.tabs.create` and `chrome.tabs.update` — neither requires `tabs`.
-- Reading `tab.url` in `chrome.action.onClicked` — supplied by the
-  `<all_urls>` **host** permission, which is separate from the `tabs`
-  permission. Verified in a real browser, not assumed.
+- Reading `tab.url` in `chrome.action.onClicked` — supplied by the host
+  permission, which is separate from the `tabs` permission. Verified in a
+  real browser, not assumed.
 
 `webNavigation` was removed along with `installNavigationFallback`. If the
 declarativeNetRequest redirect ever stops applying to `file://`, that

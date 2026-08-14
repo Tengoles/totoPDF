@@ -102,9 +102,16 @@ is the privacy policy, and `docs/store/screenshots/` holds four 1280x800
 captures taken from the running extension.
 
 Permissions are exactly `declarativeNetRequest`, `contextMenus`, `storage`
-plus the `<all_urls>` host permission, and a test asserts that set. Do not
-add one without a justification written into `docs/store/listing.md` — every
+plus the `file:///*` host permission, and tests assert both sets. Do not add
+one without a justification written into `docs/store/listing.md`; every
 permission has to be defended to review.
+
+**totoPDF opens local files only, and that is what keeps the host permission
+narrow.** `parseViewerQuery` rejects anything that is not a `file://` URL, so
+the extension makes no network requests at all. A PDF from the web is handled
+by the user downloading it and dragging it in, which needs no permission.
+Re-adding remote loading means going back to broad host access and
+re-justifying it — treat it as a product decision, not a feature gap.
 
 ## Verification culture
 

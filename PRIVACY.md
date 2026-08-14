@@ -18,12 +18,10 @@ disco, a través de la File System Access API del navegador, el mismo
 mecanismo que te muestra un diálogo de guardado y te pregunta en qué archivo
 escribir.
 
-El archivo nunca sale de tu computadora: totoPDF no sube nada, y no hay
-servidor al que pudiera subirlo. La única petición de red que hace es
-descargar el PDF que le pediste abrir, desde la dirección desde la que lo
-abriste. Es la misma petición que haría Chrome para mostrar ese PDF. totoPDF
-no tiene analíticas, ni telemetría, ni reportes de errores, ni publicidad, ni
-rastreo de ningún tipo.
+El archivo nunca sale de tu computadora. totoPDF no hace ninguna petición de
+red: no sube nada, no descarga nada y no hay servidor al que pudiera hacerlo.
+Solo abre archivos que ya están en tu disco. No tiene analíticas, ni
+telemetría, ni reportes de errores, ni publicidad, ni rastreo de ningún tipo.
 
 ## Qué guarda totoPDF, y dónde
 
@@ -51,31 +49,20 @@ computadora y nunca se envía a ninguna parte.
 Para eliminar las tres, desinstala la extensión. Chrome borra los datos de
 `chrome.storage` e IndexedDB de una extensión cuando se la elimina.
 
-## Por qué totoPDF pide acceso a todos los sitios
+## Qué permisos pide totoPDF, y por qué
 
-Chrome lo muestra como "Leer y modificar todos tus datos en todos los sitios
-web", que suena mucho más grande que lo que totoPDF hace con ese permiso, así
-que conviene decirlo con claridad.
+totoPDF pide acceso a los archivos de tu computadora (`file:///*`) y nada
+más. No pide acceso a sitios web, porque no abre PDF de la web: solo abre
+archivos que ya están en tu disco.
 
-totoPDF lo necesita para dos cosas. Redirige las direcciones de PDF a su
-propio visor, y Chrome exige permiso para la dirección que se está
-redirigiendo. Y una vez que el visor está abierto, tiene que descargar el PDF
-que le indicaste, que puede estar en cualquier dirección.
+Si quieres anotar un PDF de internet, descárgalo y arrástralo a una pestaña
+de totoPDF. Un archivo arrastrado no necesita ningún permiso.
 
-Se consideró un permiso más restringido y no funciona: los PDF se sirven
-constantemente desde direcciones que no terminan en `.pdf`, así que un
-permiso basado en patrones fallaría en silencio con muchos documentos.
-
-totoPDF no lee, no modifica ni recopila el contenido de las páginas web. Lo
-único que descarga es un PDF que le pediste abrir.
-
-## Archivos locales
-
-Si activas "Permitir acceso a URL de archivo" en la tarjeta de totoPDF en
-`chrome://extensions`, totoPDF puede abrir los PDF guardados en tu
-computadora. Ese permiso es de Chrome, viene desactivado, una extensión no
-puede activarlo por su cuenta, y puedes desactivarlo cuando quieras. totoPDF
-lo usa solamente para leer un PDF que abriste o al que navegaste.
+Además, para poder leer archivos de tu disco, tienes que activar "Permitir
+acceso a URL de archivo" en la tarjeta de totoPDF en `chrome://extensions`.
+Ese permiso es de Chrome, viene desactivado, una extensión no puede activarlo
+por su cuenta, y puedes desactivarlo cuando quieras. totoPDF lo usa solamente
+para leer un PDF que abriste.
 
 ## Niños
 
@@ -115,12 +102,10 @@ When you save, it writes those annotations into the PDF file on your disk,
 through the browser's File System Access API, the same mechanism that shows
 you a save dialog and asks which file to write.
 
-The file never leaves your computer: totoPDF uploads nothing, and there is no
-server for it to upload to. The only network request it makes is fetching the
-PDF you asked it to open, from the address you opened it from. That is the
-same request Chrome would make to display that PDF itself. totoPDF contains no
-analytics, no telemetry, no crash reporting, no advertising, and no tracking
-of any kind.
+The file never leaves your computer. totoPDF makes no network requests at
+all: it uploads nothing, downloads nothing, and has no server to do either
+with. It only opens files already on your disk. It contains no analytics, no
+telemetry, no crash reporting, no advertising, and no tracking of any kind.
 
 ## What totoPDF stores, and where
 
@@ -147,31 +132,19 @@ on your computer and is never sent anywhere.
 To remove all three, uninstall the extension. Chrome deletes an extension's
 `chrome.storage` and IndexedDB data when the extension is removed.
 
-## Why totoPDF asks for access to all sites
+## What permissions totoPDF asks for, and why
 
-Chrome shows this as "Read and change all your data on all websites", which
-sounds much larger than what totoPDF does with it, so it is worth stating
-plainly.
+totoPDF asks for access to files on your computer (`file:///*`) and nothing
+else. It does not ask for access to websites, because it does not open PDFs
+from the web: it opens files already on your disk.
 
-totoPDF needs it for two things. It redirects PDF URLs to its own viewer, and
-Chrome requires permission for the address being redirected. And once the
-viewer is open, it has to fetch the PDF you pointed it at, which can be at any
-address.
+To annotate a PDF from the internet, download it and drag it onto a totoPDF
+tab. A dragged file needs no permission at all.
 
-A narrower permission was considered and does not work: PDFs are constantly
-served from URLs that do not end in `.pdf`, so a pattern-based permission
-would silently fail on many documents.
-
-totoPDF does not read, modify, or collect the content of web pages. The only
-thing it fetches is a PDF you have asked it to open.
-
-## Local files
-
-If you turn on "Allow access to file URLs" on totoPDF's `chrome://extensions`
-card, totoPDF can open PDFs stored on your computer. That switch is Chrome's,
+Separately, reading files from your disk requires you to turn on "Allow access
+to file URLs" on totoPDF's `chrome://extensions` card. That switch is Chrome's,
 it is off by default, an extension cannot turn it on for itself, and you can
-turn it off at any time. totoPDF uses it only to read a PDF you navigate to or
-explicitly open.
+turn it off at any time. totoPDF uses it only to read a PDF you open.
 
 ## Children
 
