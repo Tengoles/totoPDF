@@ -219,6 +219,14 @@ filing a bug that turns out to be one of these.
   `file://` interception have since been exercised by hand in Chrome and all
   work. Firefox and Acrobat remain unchecked -- see the table below.
 
+- **The built `dist/` loads unpacked in stock Chrome.** Confirmed by hand on
+  2026-08-14, after `default_locale` moved to `es` -- the field worth checking
+  by hand, because a manifest naming a `default_locale` with no matching
+  `_locales` directory makes Chrome refuse the extension outright rather than
+  degrade. This was a smoke test of the loaded extension, not an exhaustive
+  pass: it establishes that Chrome accepts the package and the viewer runs,
+  not that every feature was re-exercised there.
+
 - **The Spanish UI has been driven in a real Chromium session too, via
   Playwright, using `--lang=es` on a fresh profile.** That is the real
   locale-selection mechanism, not a catalogue swap: `chrome.i18n.getUILanguage()`
