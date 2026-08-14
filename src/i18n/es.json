@@ -1,5 +1,5 @@
 {
-  "extensionName": { "message": "totoPDF" },
+  "extensionName": { "message": "totoPDF - Todo Obvio, Todo Operativo" },
   "uiLanguage": { "message": "es" },
   "extensionDescription": {
     "message": "Lee PDFs, resalta texto y agrega cuadros de texto. Las anotaciones se escriben dentro del archivo PDF."

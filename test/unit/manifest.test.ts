@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import pkg from '../../package.json';
 import manifest from '../../public/manifest.json';
-import en from '../../src/i18n/en.json';
+import es from '../../src/i18n/es.json';
 
 describe('manifest', () => {
   it('is MV3 with a module service worker', () => {
@@ -53,13 +53,18 @@ describe('manifest', () => {
   });
 
   it('names a default locale and resolves every message reference', () => {
-    expect(manifest.default_locale).toBe('en');
+    // Spanish is the default: a browser in neither English nor Spanish falls
+    // back to this catalogue, and the store listing's title is the name
+    // resolved here. References are checked against es.json rather than
+    // en.json for that reason -- it is the catalogue Chrome actually falls
+    // back to. The two carry identical key sets, which i18n.test.ts enforces.
+    expect(manifest.default_locale).toBe('es');
     const references = [...JSON.stringify(manifest).matchAll(/__MSG_([A-Za-z0-9_]+)__/g)].map(
       (match) => match[1] ?? '',
     );
     expect(references.length).toBeGreaterThan(0);
     for (const reference of references) {
-      expect(en, reference).toHaveProperty(reference);
+      expect(es, reference).toHaveProperty(reference);
     }
   });
 });

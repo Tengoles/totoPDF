@@ -1,5 +1,5 @@
 {
-  "extensionName": { "message": "totoPDF" },
+  "extensionName": { "message": "totoPDF - Highlight and Annotate PDFs" },
   "uiLanguage": { "message": "en" },
   "extensionDescription": {
     "message": "Read PDFs, highlight text, and add text boxes. Annotations are written into the PDF file."
