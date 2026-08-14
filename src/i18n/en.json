@@ -1,0 +1,119 @@
+{
+  "extensionName": { "message": "totoPDF" },
+  "extensionDescription": {
+    "message": "Read PDFs, highlight text, and add text boxes. Annotations are written into the PDF file."
+  },
+  "actionTitle": { "message": "Open this PDF in totoPDF" },
+  "contextMenuOpen": { "message": "Open in totoPDF" },
+
+  "toolbarPages": { "message": "Pages" },
+  "toolbarPagesTitle": { "message": "Show or hide the page thumbnail rail." },
+  "toolbarNotes": { "message": "Notes" },
+  "toolbarNotesTitle": { "message": "Show or hide the annotation rail." },
+  "toolbarHighlight": { "message": "Highlight" },
+  "toolbarHighlightTitle": { "message": "Highlight selected text. Keys 1-5 change colour." },
+  "toolbarTextBox": { "message": "Text box" },
+  "toolbarTextBoxTitle": { "message": "Drag a box on the page and type inside it." },
+  "toolbarSave": { "message": "Save" },
+  "toolbarSaveTitle": { "message": "Write annotations into the PDF file (Ctrl+S)." },
+  "toolbarOpenInChrome": { "message": "Open in Chrome" },
+  "toolbarOpenInChromeTitle": { "message": "Open this file in Chrome's built-in PDF viewer." },
+
+  "paletteYellow": { "message": "Yellow" },
+  "paletteGreen": { "message": "Green" },
+  "paletteBlue": { "message": "Blue" },
+  "palettePink": { "message": "Pink" },
+  "paletteOrange": { "message": "Orange" },
+  "swatchTitle": {
+    "message": "$NAME$ (key $KEY$). Click to use it, right-click to change this colour.",
+    "placeholders": { "name": { "content": "$1" }, "key": { "content": "$2" } }
+  },
+  "swatchColorInputLabel": {
+    "message": "New colour for the $NAME$ swatch (key $KEY$).",
+    "placeholders": { "name": { "content": "$1" }, "key": { "content": "$2" } }
+  },
+
+  "textColorLabel": { "message": "Text colour" },
+  "textColorTitle": { "message": "Colour of the text in a text box." },
+  "textSizeLabel": { "message": "Text size" },
+  "textSizeTitle": {
+    "message": "Font size of text in a text box, $MIN$ to $MAX$.",
+    "placeholders": { "min": { "content": "$1" }, "max": { "content": "$2" } }
+  },
+
+  "zoomOutTitle": { "message": "Zoom out (Ctrl and minus)." },
+  "zoomInTitle": { "message": "Zoom in (Ctrl and plus)." },
+  "zoomReadoutTitle": { "message": "Current zoom level. Opens the list of zoom levels." },
+  "zoomFitWidth": { "message": "Fit width" },
+  "zoomFitPage": { "message": "Fit page" },
+  "zoomActualSize": { "message": "Actual size" },
+
+  "pageInputTitle": {
+    "message": "Page being shown. Type a page number and press Enter to go to it."
+  },
+  "pageInputLabel": { "message": "Page number" },
+  "pageTotal": {
+    "message": "of $COUNT$",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+
+  "saveStatusUnsaved": { "message": "Unsaved changes" },
+  "saveStatusSaving": { "message": "Saving" },
+  "saveStatusSaved": { "message": "Saved" },
+  "saveStatusUnsavedTitle": {
+    "message": "These annotations are not in the PDF file yet. Press Ctrl+S to write them."
+  },
+  "saveStatusSavingTitle": { "message": "Writing annotations into the PDF file." },
+  "saveStatusSavedTitle": { "message": "Every annotation is written into the PDF file." },
+
+  "railHeading": {
+    "message": "Annotations ($COUNT$)",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "railEmpty": { "message": "Highlights and text boxes you add will be listed here." },
+  "railEntry": {
+    "message": "p.$PAGE$  $TEXT$",
+    "placeholders": { "page": { "content": "$1" }, "text": { "content": "$2" } }
+  },
+  "railKindHighlight": { "message": "highlight" },
+  "railKindTextbox": { "message": "textbox" },
+
+  "capabilityEncrypted": {
+    "message": "This PDF is encrypted. totoPDF can display it but cannot save changes to it."
+  },
+  "capabilityNoText": {
+    "message": "This PDF has no selectable text, so highlighting is unavailable. Text boxes still work."
+  },
+
+  "loadFailedHttp": {
+    "message": "Could not load $URL$ (HTTP $STATUS$)",
+    "placeholders": { "url": { "content": "$1" }, "status": { "content": "$2" } }
+  },
+
+  "saveStillOpening": { "message": "Wait for the document to finish opening, then save." },
+  "savePermissionDenied": {
+    "message": "Write permission was denied. Choose the file again to save."
+  },
+
+  "autosaveStopped": {
+    "message": "Automatic saving stopped for this document. Press Ctrl+S to save it. The write failed with:"
+  },
+  "fileAccessHint": {
+    "message": "Chrome blocks extensions from reading local files until you allow it: open chrome://extensions, find totoPDF, turn on \"Allow access to file URLs\", then reload this page."
+  },
+  "loadingOpening": { "message": "Opening document" },
+  "loadingSaving": { "message": "Writing annotations into the PDF file" },
+  "saveConfirmed": { "message": "Annotations written into the PDF file." },
+  "settingsSaveFailed": {
+    "message": "Settings could not be saved. $ERROR$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "startupFailed": {
+    "message": "totoPDF could not start. $ERROR$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+
+  "unsavedSwitchWarning": {
+    "message": "This document has unsaved annotations, and opening another document discards them. Cancel, press Ctrl+S to write them into the file, then open the other document."
+  }
+}
