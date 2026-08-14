@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "totoPDF",
+  "name": "__MSG_extensionName__",
   "version": "0.1.0",
-  "description": "Read PDFs, highlight text, and add text boxes. Annotations are written into the PDF file.",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
   "minimum_chrome_version": "120",
   "background": { "service_worker": "background.js", "type": "module" },
-  "action": { "default_title": "Open this PDF in totoPDF" },
+  "action": { "default_title": "__MSG_actionTitle__" },
   "permissions": ["declarativeNetRequest", "contextMenus", "storage", "tabs", "webNavigation"],
   "host_permissions": ["<all_urls>"],
   "web_accessible_resources": [
