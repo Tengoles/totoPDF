@@ -1,5 +1,6 @@
 import type { AnnotationBridge } from '../core/annotation-bridge';
-import type { PaletteEntry } from '../core/settings';
+import { t } from '../core/i18n';
+import { type PaletteEntry, paletteDisplayName } from '../core/settings';
 
 /**
  * The five highlight swatches. A left click arms a colour; a right click edits
@@ -47,7 +48,10 @@ function hiddenColorInput(entry: PaletteEntry, index: number): HTMLInputElement 
   input.className = 'swatch-color';
   input.value = entry.hex;
   input.tabIndex = -1;
-  input.setAttribute('aria-label', `New colour for the ${entry.name} swatch (key ${index + 1}).`);
+  input.setAttribute(
+    'aria-label',
+    t('swatchColorInputLabel', paletteDisplayName(entry.name), String(index + 1)),
+  );
   return input;
 }
 
@@ -61,7 +65,7 @@ function swatchButton(entry: PaletteEntry, index: number, canHighlight: boolean)
   // hidden feature. Keep the word "highlight" out of it: the e2e specs locate
   // the Highlight button by accessible name, and Playwright matches by
   // substring.
-  swatch.title = `${entry.name} (key ${index + 1}). Click to use it, right-click to change this colour.`;
+  swatch.title = t('swatchTitle', paletteDisplayName(entry.name), String(index + 1));
   swatch.disabled = !canHighlight;
   return swatch;
 }

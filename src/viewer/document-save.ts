@@ -3,12 +3,13 @@ import { type Capabilities, ENCRYPTED_REASON } from '../core/document-capabiliti
 import type { LoadedDocument } from '../core/document-source';
 import type { HandleStore } from '../core/file-handles';
 import { ensureWritePermission, hasWritePermission, writeGrantedBytes } from '../core/file-writer';
+import { t } from '../core/i18n';
 import { buildSavedBytes } from '../core/save-pipeline';
 import { contentHash, type JournalTracker } from './journal-tracker';
 
-const OPENING_REASON = 'Wait for the document to finish opening, then save.';
+const OPENING_REASON = t('saveStillOpening');
 
-const PERMISSION_DENIED_REASON = 'Write permission was denied. Choose the file again to save.';
+const PERMISSION_DENIED_REASON = t('savePermissionDenied');
 
 /**
  * 'saved' is the only outcome that wrote anything; the caller has to tell them

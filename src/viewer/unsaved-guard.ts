@@ -1,8 +1,7 @@
+import { t } from '../core/i18n';
 import type { DocumentController } from './document-controller';
 
-const UNSAVED_SWITCH_WARNING =
-  'This document has unsaved annotations, and opening another document discards them. ' +
-  'Cancel, press Ctrl+S to write them into the file, then open the other document.';
+const UNSAVED_SWITCH_WARNING = t('unsavedSwitchWarning');
 
 /**
  * A crash or an accidental tab close should not silently lose unsaved

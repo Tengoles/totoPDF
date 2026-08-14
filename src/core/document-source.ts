@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import { computeIdentity } from './identity';
 
 /** An origin whose bytes can be fetched by URL. */
@@ -77,7 +78,7 @@ export async function loadFromOrigin(
 ): Promise<LoadedDocument> {
   const response = await fetchImpl(origin.url);
   if (!response.ok) {
-    throw new Error(`Could not load ${origin.url} (HTTP ${response.status})`);
+    throw new Error(t('loadFailedHttp', origin.url, String(response.status)));
   }
   const bytes = new Uint8Array(await response.arrayBuffer());
   return {

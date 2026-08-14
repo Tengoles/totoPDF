@@ -1,3 +1,5 @@
+import { type MessageKey, t } from './i18n';
+
 const STORAGE_KEY = 'settings';
 
 export interface PaletteEntry {
@@ -28,9 +30,33 @@ export const DEFAULT_SETTINGS: Settings = {
   freeTextColor: '#D32F2F',
 };
 
-/** pdf.js accepts the palette as a comma-separated "name=#RRGGBB" string. */
+/**
+ * PaletteEntry.name is a stable id, not a label: it is persisted, and
+ * localizing what is stored would leave a Spanish name in an English UI after
+ * a locale change. The display name is resolved here instead, and falls back
+ * to the id for anything it does not recognise -- normalizeSettings accepts
+ * any name matching SAFE_NAME, including from hand-edited storage.
+ */
+const PALETTE_NAME_KEYS: Record<string, MessageKey> = {
+  yellow: 'paletteYellow',
+  green: 'paletteGreen',
+  blue: 'paletteBlue',
+  pink: 'palettePink',
+  orange: 'paletteOrange',
+};
+
+export function paletteDisplayName(name: string): string {
+  const key = PALETTE_NAME_KEYS[name];
+  return key ? t(key) : name;
+}
+
+/**
+ * pdf.js accepts the palette as a comma-separated "name=#RRGGBB" string, and
+ * labels its own highlight colour menu from it -- so this sends the display
+ * name, not the id, which is what localizes that menu.
+ */
 export function paletteToHighlightColors(palette: readonly PaletteEntry[]): string {
-  return palette.map((entry) => `${entry.name}=${entry.hex}`).join(',');
+  return palette.map((entry) => `${paletteDisplayName(entry.name)}=${entry.hex}`).join(',');
 }
 
 /**

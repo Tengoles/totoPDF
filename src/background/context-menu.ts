@@ -1,3 +1,4 @@
+import { t } from '../core/i18n';
 import { viewerUrlFor } from './interception';
 
 const MENU_ID = 'totopdf-open';
@@ -21,7 +22,7 @@ export function installContextMenu(): void {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
       id: MENU_ID,
-      title: 'Open in totoPDF',
+      title: t('contextMenuOpen'),
       contexts: ['link', 'page'],
       targetUrlPatterns: ['*://*/*.pdf', '*://*/*.PDF', 'file:///*.pdf', 'file:///*.PDF'],
       documentUrlPatterns: ['*://*/*', 'file:///*'],

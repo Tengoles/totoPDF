@@ -23,12 +23,14 @@ function memoryArea(): chrome.storage.StorageArea {
 
 describe('paletteToHighlightColors', () => {
   it('serializes to the name=#RRGGBB form pdf.js expects', () => {
+    // The display name, not the stored id: pdf.js labels its built-in
+    // highlight colour menu from this string.
     expect(
       paletteToHighlightColors([
         { name: 'yellow', hex: '#FFF176' },
         { name: 'green', hex: '#81C784' },
       ]),
-    ).toBe('yellow=#FFF176,green=#81C784');
+    ).toBe('Yellow=#FFF176,Green=#81C784');
   });
 
   it('serializes the default palette without spaces', () => {

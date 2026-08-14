@@ -10,6 +10,7 @@ import {
   parseViewerQuery,
 } from '../core/document-source';
 import { openHandleStore } from '../core/file-handles';
+import { t } from '../core/i18n';
 import { openJournal } from '../core/recovery-journal';
 import { loadSettings, paletteToHighlightColors, type Settings } from '../core/settings';
 import { clearBanners, showBanner, showLoading } from '../ui/errors';
@@ -30,13 +31,9 @@ const SAVE_CONFIRMATION_MS = 5000;
 /** The tab title with nothing open. */
 const APP_TITLE = 'totoPDF';
 
-const AUTOSAVE_STOPPED =
-  'Automatic saving stopped for this document. Press Ctrl+S to save it. The write failed with:';
+const AUTOSAVE_STOPPED = t('autosaveStopped');
 
-const FILE_ACCESS_HINT =
-  'Chrome blocks extensions from reading local files until you allow it: open ' +
-  'chrome://extensions, find totoPDF, turn on "Allow access to file URLs", then reload this ' +
-  'page.';
+const FILE_ACCESS_HINT = t('fileAccessHint');
 
 function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -75,7 +72,7 @@ async function presentDocument(
   loaded: LoadedDocument,
 ): Promise<void> {
   clearBanners(document.body);
-  const dismiss = showLoading(document.body, 'Opening document');
+  const dismiss = showLoading(document.body, t('loadingOpening'));
   try {
     await controller.present(loaded);
     const capabilities = controller.capabilities();
@@ -97,12 +94,12 @@ async function presentDocument(
  */
 function handleSave(controller: DocumentController): void {
   clearBanners(document.body);
-  const dismiss = showLoading(document.body, 'Writing annotations into the PDF file');
+  const dismiss = showLoading(document.body, t('loadingSaving'));
   void controller
     .save()
     .then((outcome) => {
       if (outcome === 'saved') {
-        const message = 'Annotations written into the PDF file.';
+        const message = t('saveConfirmed');
         showBanner(document.body, message, 'success', SAVE_CONFIRMATION_MS);
       }
     })
@@ -234,7 +231,7 @@ async function start(
   // nothing is selected, which is when arming actually holds.
   host.eventBus.on('annotationeditormodechanged', () => bridge.reapply());
   const wiring = createSettingsWiring(settings, chrome.storage.local, (error) => {
-    showBanner(document.body, `Settings could not be saved. ${describeError(error)}`, 'error');
+    showBanner(document.body, t('settingsSaveFailed', describeError(error)), 'error');
   });
   const handles = await openHandleStore();
   const journal = await openJournal();
@@ -266,6 +263,8 @@ async function start(
 }
 
 async function main(): Promise<void> {
+  // viewer.html ships lang="en"; a screen reader needs the real one.
+  document.documentElement.lang = chrome.i18n.getUILanguage();
   const toolbarRoot = document.querySelector<HTMLElement>('#toolbar');
   const container = document.querySelector<HTMLDivElement>('#viewer-container');
   const viewerDiv = document.querySelector<HTMLDivElement>('#viewer-inner');
@@ -277,7 +276,7 @@ async function main(): Promise<void> {
   } catch (error) {
     // loadSettings, openHandleStore and openJournal were all unguarded; any of
     // them failing left the page blank with the reason only in the console.
-    showBanner(document.body, `totoPDF could not start. ${describeError(error)}`, 'error');
+    showBanner(document.body, t('startupFailed', describeError(error)), 'error');
   }
 }
 

@@ -1,4 +1,5 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
+import { t } from './i18n';
 
 export interface Capabilities {
   canSave: boolean;
@@ -11,11 +12,9 @@ export interface DocumentFacts {
   firstPageHasText: boolean;
 }
 
-export const ENCRYPTED_REASON =
-  'This PDF is encrypted. totoPDF can display it but cannot save changes to it.';
+export const ENCRYPTED_REASON = t('capabilityEncrypted');
 
-const NO_TEXT_REASON =
-  'This PDF has no selectable text, so highlighting is unavailable. Text boxes still work.';
+const NO_TEXT_REASON = t('capabilityNoText');
 
 /**
  * Saving an encrypted document would require encrypting the appended objects
