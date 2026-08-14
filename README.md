@@ -112,10 +112,12 @@ filing a bug that turns out to be one of these.
 
 - **`file://` interception is verified working.** Navigating to a local PDF
   redirects into totoPDF automatically, confirmed by hand in a real Chrome
-  session on 2026-08-13. `src/background/interception.ts` also exports
-  `installNavigationFallback`, an alternative `webNavigation` implementation
-  kept unused in case the redirect rule stops applying to `file://` on a
-  future Chrome release.
+  session on 2026-08-13. `src/background/interception.ts` used to also
+  export `installNavigationFallback`, an alternative `webNavigation`
+  implementation kept unused in case the redirect rule stopped applying to
+  `file://` on a future Chrome release. It was removed when the unused
+  `webNavigation` permission was dropped for store submission; it remains in
+  git history (commit `3899523`) if the redirect rule ever stops working.
 
 - **A local path containing `&` or `#` is never auto-intercepted, and this
   is deliberate.** The redirect rule builds the destination URL with a

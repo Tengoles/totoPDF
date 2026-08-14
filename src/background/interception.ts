@@ -35,24 +35,6 @@ export async function installInterception(): Promise<void> {
   });
 }
 
-/**
- * Fallback for Chrome builds where declarativeNetRequest does not match
- * file:// navigations. Not currently wired up in src/background/index.ts —
- * kept available pending empirical verification with a real browser.
- */
-export function installNavigationFallback(): void {
-  chrome.webNavigation.onBeforeNavigate.addListener(
-    (details) => {
-      if (details.frameId !== 0) {
-        return;
-      }
-      const viewerUrl = viewerUrlFor(details.url, chrome.runtime.getURL('viewer.html'));
-      void chrome.tabs.update(details.tabId, { url: viewerUrl });
-    },
-    { url: [{ urlPrefix: 'file://', urlSuffix: '.pdf' }] },
-  );
-}
-
 export const ESCAPE_RULE_ID = 2;
 const ESCAPE_WINDOW_MS = 10_000;
 
