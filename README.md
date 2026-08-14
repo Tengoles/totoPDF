@@ -224,10 +224,11 @@ filing a bug that turns out to be one of these.
   banner text was confirmed by reading `chrome.i18n.getMessage('saveConfirmed')`
   from the loaded catalogue -- `Anotaciones escritas en el archivo PDF.` --
   rather than by watching it appear on screen. Chrome's own UI rendered in
-  Spanish under `--lang=es` as well; on `chrome://extensions`, the file-access
-  toggle read `Permitir acceso a URL de archivo` (singular `URL`), not
-  `Permitir acceso a URLs de archivo` as the `fileAccessHint` string quotes
-  it -- worth checking before calling that quote verbatim-correct.
+  Spanish under `--lang=es` as well; on `chrome://extensions`, the
+  file-access toggle read `Permitir acceso a URL de archivo` (singular
+  `URL`), which was checked against the `fileAccessHint` string's quote of
+  it and corrected to match -- it previously read the plural `URLs de
+  archivo`.
 
 ## Cross-reader checklist
 

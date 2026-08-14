@@ -101,7 +101,7 @@
     "message": "El guardado automático se detuvo para este documento. Presiona Ctrl+S para guardarlo. La escritura falló con:"
   },
   "fileAccessHint": {
-    "message": "Chrome no deja que las extensiones lean archivos locales hasta que lo permitas: abre chrome://extensions, busca totoPDF, activa \"Permitir acceso a URLs de archivo\" y vuelve a cargar esta página."
+    "message": "Chrome no deja que las extensiones lean archivos locales hasta que lo permitas: abre chrome://extensions, busca totoPDF, activa \"Permitir acceso a URL de archivo\" y vuelve a cargar esta página."
   },
   "loadingOpening": { "message": "Abriendo el documento" },
   "loadingSaving": { "message": "Escribiendo las anotaciones en el archivo PDF" },
