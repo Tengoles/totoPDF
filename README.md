@@ -203,6 +203,32 @@ filing a bug that turns out to be one of these.
   `file://` interception have since been exercised by hand in Chrome and all
   work. Firefox and Acrobat remain unchecked -- see the table below.
 
+- **The Spanish UI has been driven in a real Chromium session too, via
+  Playwright, using `--lang=es` on a fresh profile.** That is the real
+  locale-selection mechanism, not a catalogue swap: `chrome.i18n.getUILanguage()`
+  reported `es-ES` and the Save button read `Guardar` before anything else was
+  checked. The toolbar was measured at 1280px and 2000px with the Spanish
+  strings loaded -- `scrollWidth` matched `clientWidth` at both, every toolbar
+  child shared the same `top`, and no button label wrapped -- so despite
+  Spanish running 15-25% longer than English, neither `es.json` nor
+  `styles.css` needed a change. pdf.js's own highlight-colour dropdown, opened
+  by selecting a highlight and clicking its colour swatch (not just read from
+  source), showed Amarillo, Verde, Azul, Rosa, Naranja, confirming
+  `paletteToHighlightColors` reaches it. One thing was not observed directly:
+  a completed save through the real Save button and its native OS file
+  picker, since `showSaveFilePicker()` has no one to click through it in an
+  unattended session and was rejected automatically. In its place, the save
+  pipeline was exercised through the same code the button calls
+  (`buildSavedBytes`), which wrote a `/Highlight` and a `/FreeText`
+  annotation into the file with the incremental-update prefix intact, and the
+  banner text was confirmed by reading `chrome.i18n.getMessage('saveConfirmed')`
+  from the loaded catalogue -- `Anotaciones escritas en el archivo PDF.` --
+  rather than by watching it appear on screen. Chrome's own UI rendered in
+  Spanish under `--lang=es` as well; on `chrome://extensions`, the file-access
+  toggle read `Permitir acceso a URL de archivo` (singular `URL`), not
+  `Permitir acceso a URLs de archivo` as the `fileAccessHint` string quotes
+  it -- worth checking before calling that quote verbatim-correct.
+
 ## Cross-reader checklist
 
 Partly done. To finish it: open a PDF in totoPDF, add one highlight and one
