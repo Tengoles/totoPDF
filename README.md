@@ -95,7 +95,21 @@ command above whenever you need them.
 
 ## Deploy
 
-Not published. Loaded unpacked from `dist/`.
+Not yet published, but ready to be. Publishing a new version:
+
+1. Bump the version in **both** `public/manifest.json` and `package.json`.
+   `test/unit/manifest.test.ts` fails if they drift, and the store refuses a
+   re-upload whose version did not increase.
+2. Run `npm run package`. This builds `dist/` and writes
+   `totopdf-<version>.zip` at the repository root, using
+   `tools/package.mjs` -- a dependency-free zip writer built on `node:zlib`,
+   since a zip only Node's own tooling can read proves nothing about what
+   the store will accept.
+3. Upload that zip on the Chrome Web Store developer dashboard. Registering
+   as a developer costs a one-time $5 fee; the extension itself stays free.
+   `docs/store/listing.md` has every listing field ready to paste, and
+   `PRIVACY.md` is the source for the privacy policy URL the dashboard asks
+   for.
 
 ## Limitations
 

@@ -11,7 +11,8 @@
     "test:e2e": "playwright test",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "dev": "vite build --watch"
+    "dev": "vite build --watch",
+    "package": "npm run build && node tools/package.mjs"
   },
   "keywords": [],
   "author": "",
