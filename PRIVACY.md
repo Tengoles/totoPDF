@@ -12,13 +12,13 @@ your computer.
 
 totoPDF opens a PDF, displays it, and lets you add highlights and text boxes.
 When you save, it writes those annotations into the PDF file on your disk,
-through the browser's File System Access API — the same mechanism that shows
+through the browser's File System Access API, the same mechanism that shows
 you a save dialog and asks which file to write.
 
 The file never leaves your computer: totoPDF uploads nothing, and there is no
 server for it to upload to. The only network request it makes is fetching the
-PDF you asked it to open, from the address you opened it from — the same
-request Chrome would make to display that PDF itself. totoPDF contains no
+PDF you asked it to open, from the address you opened it from. That is the
+same request Chrome would make to display that PDF itself. totoPDF contains no
 analytics, no telemetry, no crash reporting, no advertising, and no tracking
 of any kind.
 
