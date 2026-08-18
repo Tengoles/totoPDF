@@ -23,7 +23,7 @@ DOM, the code belongs in `src/ui`; if you need pdf.js, it belongs in
 | `settings.ts` | The palette, text-box defaults, and their storage. Also `paletteDisplayName`. |
 | `annotation-bridge.ts` | The tool-mode contract the toolbar drives and the viewer implements. |
 | `annotation-index.ts` | Reads annotations out of a document into rail items. |
-| `document-capabilities.ts` | What a given PDF allows: encrypted means no save, no text layer means no highlight. |
+| `document-capabilities.ts` | What a given PDF allows: encrypted means no save; no text layer means highlighting is drawn rather than selected. |
 | `document-source.ts` | Loading a document from a URL or a File, and its identity. |
 | `identity.ts` | The content hash a document is keyed by. |
 | `file-handles.ts` | The IndexedDB store of File System Access handles. |

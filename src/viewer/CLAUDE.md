@@ -34,6 +34,24 @@ selected — observed as a text box coming out in pdf.js's black at size 10
 instead of the toolbar's settings. `main.ts` re-applies on
 `annotationeditormodechanged`, which fires once the switch has finished.
 
+**pdf.js announces an editor change before the editor exists in storage.**
+`editingstateschanged` is dispatched from inside `AnnotationEditorLayer.add()`,
+several statements before that same call stack reaches
+`addToAnnotationStorage()`. Reading `annotationStorage` synchronously in that
+handler therefore sees the document as it was *before* the edit. A text
+highlight hides it: it is selected right after it is added, and the selection
+fires a second event by which time the storage is written. A drawn highlight is
+never auto-selected, so that second event never comes — the rail listed
+nothing, the journal recorded nothing, and the document called itself clean, so
+neither autosave nor the tab-close warning ran. `onEditorChangeSettled` in
+`editor-change-events.ts` is the one subscription point, and it defers to a
+microtask. Do not subscribe to the raw event.
+
+**A drawn highlight is not a `/Highlight`.** pdf.js writes the text-selected
+kind as `/Highlight` with QuadPoints quoting the words, and the drawn kind as
+`/Ink` with `/IT /InkHighlight`. Anything matching highlights by subtype has to
+know both, which is why `annotation-index.ts` keys off the intent.
+
 **pdf.js caches the highlight colour list at construction.** The built-in
 colour menu it renders keeps offering whatever `PDFViewer` was given when it
 was built, so a palette recolour reaches the toolbar's swatches immediately

@@ -20,9 +20,12 @@ content rather than something only totoPDF understands.
     permission at all and is how a PDF from the web gets in: download it,
     then drop it.
 - Highlight tool with a 5-colour palette; keys 1-5 switch colour while the
-  tool is armed. Clicking a swatch uses that colour; right-clicking one opens
-  the browser's own colour picker for it, so any of the five can be set to
-  any colour. The palette, and which swatch is armed, are remembered across
+  tool is armed. On a page with a text layer it highlights the words you drag
+  across; on a scanned page with no text under the image it paints the stroke
+  you drag instead, so a scan can be marked up without OCR (see Limitations
+  for what that costs). Clicking a swatch uses that colour; right-clicking
+  one opens the browser's own colour picker for it, so any of the five can be
+  set to any colour. The palette, and which swatch is armed, are remembered across
   sessions; recolouring the armed swatch applies to the next highlight with
   no extra click.
 - Text box tool with a text colour and a font size (6 to 96) set from the
@@ -58,8 +61,9 @@ content rather than something only totoPDF understands.
   current document, including ones saved in an earlier session, not just
   ones made since it was opened; clicking an entry jumps to its page.
 - Encrypted PDFs and PDFs with no extractable text layer are detected on
-  open, and the toolbar and a banner reflect what is and is not available
-  (see Limitations).
+  open, and the toolbar and a banner reflect what that means for the document
+  -- no saving for the first, drawn rather than selected highlights for the
+  second (see Limitations).
 
 ## Setup
 
@@ -171,12 +175,26 @@ filing a bug that turns out to be one of these.
   the Save button and Ctrl+S are both disabled for encrypted documents, and
   a banner states why.
 
-- **Scanned pages with no text layer cannot be highlighted.** The highlight
-  tool anchors to text; a scanned page with no OCR text layer underneath
-  the image has none to anchor to. totoPDF detects this and disables the
-  highlight tool with a banner explaining it. Text boxes still work on
-  every page regardless, since they do not need underlying text. totoPDF
-  does not do OCR.
+- **Scanned pages are highlighted by drawing, not by selecting, and totoPDF
+  still does not do OCR.** The highlight tool normally anchors to text, and a
+  scanned page has none, so there totoPDF paints the stroke you drag across
+  the page instead. It is a region you mark, not words: hold and drag along
+  the line you want covered. The banner and the tool's tooltip say so when a
+  document opens with no text layer.
+
+  Two consequences worth knowing. The Notes rail lists a drawn highlight as
+  "highlight" with no excerpt, because there is no text under it to quote --
+  a highlight made on a page that *does* have text still shows the words it
+  covers. And the annotation written into the file is an `/Ink` with an
+  `/IT /InkHighlight` intent rather than a `/Highlight` with QuadPoints,
+  which is the shape the PDF spec provides for a highlight not anchored to
+  text and what Acrobat's own free highlighter writes. It carries an `/AP`
+  appearance stream either way, so other readers render it.
+
+  Only page 1 is sampled to decide which mode a document is in, so a scanned
+  cover on an otherwise text book will show the drawn-highlight hint. Text
+  selection still works on the pages that have text; the hint is merely more
+  cautious than it needs to be.
 
 - **Every save makes the file bigger, and autosave saves often.** A save
   appends a new revision to the PDF rather than rewriting it, which is
@@ -237,6 +255,16 @@ filing a bug that turns out to be one of these.
   save-file picker, drag-and-drop from a real desktop file manager, and
   `file://` interception have since been exercised by hand in Chrome and all
   work. Firefox and Acrobat remain unchecked -- see the table below.
+
+  Drawn highlighting was checked against a real scanned book rather than only
+  the generated fixture: a 70-page JBIG2 scan with no text on any page. It
+  rendered, the banner and the tool's tooltip both switched to the
+  drag-to-draw wording, a dragged stroke painted a highlight in the armed
+  palette colour, the Notes rail listed it, the save readout moved to
+  "Unsaved changes", and the saved bytes carried an `/Ink` with
+  `/IT /InkHighlight` and an `/AP` stream over an untouched original-byte
+  prefix -- read back by pdf-lib, not pdf.js. pdf.js's default free-highlight
+  thickness covered a line of the scan's text without needing a control.
 
 - **The built `dist/` loads unpacked in stock Chrome.** Confirmed by hand on
   2026-08-14, after `default_locale` moved to `es` -- the field worth checking
