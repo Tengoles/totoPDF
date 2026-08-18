@@ -177,6 +177,33 @@ describe('buildPersistedRailItems', () => {
     ]);
   });
 
+  /**
+   * A free-form highlight -- the only kind a scanned page can carry -- is not
+   * written as /Highlight. pdf.js emits an /Ink annotation whose intent is
+   * /InkHighlight, captured here from a saved file read back through
+   * getAnnotations(). The rail has to recognise it or a reopened scan looks
+   * like it lost every highlight in it.
+   */
+  it('maps a persisted free highlight, which pdf.js writes as InkHighlight', () => {
+    const inkHighlight = {
+      subtype: 'Ink',
+      it: 'InkHighlight',
+      id: '7R',
+      color: Uint8ClampedArray.from([255, 241, 118]),
+      hasAppearance: true,
+    };
+    expect(buildPersistedRailItems(2, [inkHighlight])).toEqual([
+      { id: '7R', pageNumber: 2, kind: 'highlight', color: '#fff176', excerpt: '' },
+    ]);
+  });
+
+  it('ignores an ink annotation that is not a highlight', () => {
+    // totoPDF has no drawing tool, so a plain /Ink came from another program
+    // and is not this rail's to list.
+    const drawing = { subtype: 'Ink', id: '8R', color: Uint8ClampedArray.from([0, 0, 0]) };
+    expect(buildPersistedRailItems(1, [drawing])).toEqual([]);
+  });
+
   it('ignores subtypes outside the two supported tools', () => {
     const others = [
       { subtype: 'Text', id: '20R', contentsObj: { str: 'a sticky note' } },

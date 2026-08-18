@@ -133,7 +133,7 @@ function renderChrome(
     bridge,
     zoom,
     pages,
-    canHighlight: capabilities.canHighlight,
+    highlightMode: capabilities.highlightMode,
     canSave: capabilities.canSave,
     saveStatus: controller.saveStatus,
     onSave: () => handleSave(controller),

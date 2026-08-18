@@ -1,4 +1,5 @@
 import type { AnnotationBridge, ToolMode } from '../core/annotation-bridge';
+import type { HighlightMode } from '../core/document-capabilities';
 import { t } from '../core/i18n';
 import type { PageController } from './page-nav';
 import { createPageNavControls } from './page-nav-control';
@@ -10,10 +11,16 @@ import { createZoomControls } from './zoom-control';
 
 /**
  * bridge, freeTextColor, freeTextSize and the two text callbacks come from
- * TextBoxControlOptions; the palette, the armed index, canHighlight and their
- * two callbacks come from HighlightControlOptions.
+ * TextBoxControlOptions; the palette, the armed index and their two callbacks
+ * come from HighlightControlOptions.
  */
 export interface ToolbarOptions extends TextBoxControlOptions, HighlightControlOptions {
+  /**
+   * How highlighting works on the open document, which is not whether it is
+   * offered -- it always is. It selects the Highlight button's tooltip, since
+   * "highlight selected text" is a lie on a page that has none.
+   */
+  highlightMode: HighlightMode;
   /** The viewer's scale. Owned by the viewer host, not by the toolbar. */
   zoom: ZoomController;
   /** Which page is shown, and how many there are. Also owned by the host. */
@@ -136,12 +143,13 @@ interface ToolButtons {
   openInChrome: HTMLButtonElement;
 }
 
-function createToolButtons(canHighlight: boolean, canSave: boolean): ToolButtons {
-  const highlight = button(t('toolbarHighlight'), t('toolbarHighlightTitle'));
+function createToolButtons(highlightMode: HighlightMode, canSave: boolean): ToolButtons {
+  const highlightTitle =
+    highlightMode === 'free' ? t('toolbarHighlightFreeTitle') : t('toolbarHighlightTitle');
+  const highlight = button(t('toolbarHighlight'), highlightTitle);
   const textbox = button(t('toolbarTextBox'), t('toolbarTextBoxTitle'));
   const save = button(t('toolbarSave'), t('toolbarSaveTitle'));
   const openInChrome = button(t('toolbarOpenInChrome'), t('toolbarOpenInChromeTitle'));
-  highlight.disabled = !canHighlight;
   save.disabled = !canSave;
   return { highlight, textbox, save, openInChrome };
 }
@@ -207,7 +215,7 @@ export function renderToolbar(root: HTMLElement, options: ToolbarOptions): void 
   root.replaceChildren();
   const signal = resetToolbarListeners();
 
-  const tools = createToolButtons(options.canHighlight, options.canSave);
+  const tools = createToolButtons(options.highlightMode, options.canSave);
   const rails = createRailToggles();
 
   function syncPressedState(): void {
@@ -216,9 +224,6 @@ export function renderToolbar(root: HTMLElement, options: ToolbarOptions): void 
     tools.textbox.setAttribute('aria-pressed', String(mode === 'textbox'));
   }
 
-  // Swatches only arm the highlight tool, so they follow its availability.
-  // Recolouring one and the text-box controls are settings, not document
-  // actions, and stay usable on a document that cannot be highlighted.
   const highlightControls = createHighlightControls(options, signal, syncPressedState);
   bindToolButtons(tools, options, syncPressedState);
 

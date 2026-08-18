@@ -17,7 +17,6 @@ export interface SwatchStripOptions {
    * it rather than trusting the value the picker reported.
    */
   palette: readonly PaletteEntry[];
-  canHighlight: boolean;
   /** Left click, or the number key: arm this colour. */
   onPick(index: number): void;
   /** Right click, once the picker reports a colour. Runs before the repaint. */
@@ -55,7 +54,7 @@ function hiddenColorInput(entry: PaletteEntry, index: number): HTMLInputElement 
   return input;
 }
 
-function swatchButton(entry: PaletteEntry, index: number, canHighlight: boolean): HTMLButtonElement {
+function swatchButton(entry: PaletteEntry, index: number): HTMLButtonElement {
   const swatch = document.createElement('button');
   swatch.type = 'button';
   swatch.className = 'swatch';
@@ -66,16 +65,14 @@ function swatchButton(entry: PaletteEntry, index: number, canHighlight: boolean)
   // the Highlight button by accessible name, and Playwright matches by
   // substring.
   swatch.title = t('swatchTitle', paletteDisplayName(entry.name), String(index + 1));
-  swatch.disabled = !canHighlight;
   return swatch;
 }
 
 /**
  * One swatch and the picker behind it, wrapped in the element the toolbar
  * places. The wrapper is the picker's positioning context and carries the
- * contextmenu listener: a disabled swatch swallows its own pointer events (a
- * document with no text layer cannot be highlighted), and recolouring is a
- * setting rather than a document action, so it stays reachable there.
+ * contextmenu listener, so a right click reaches the picker wherever inside
+ * the slot it lands rather than only on the swatch itself.
  */
 function createSwatchSlot(
   entry: PaletteEntry,
@@ -86,7 +83,7 @@ function createSwatchSlot(
   const slot = document.createElement('span');
   slot.className = 'swatch-slot';
 
-  const swatch = swatchButton(entry, index, options.canHighlight);
+  const swatch = swatchButton(entry, index);
   const input = hiddenColorInput(entry, index);
 
   swatch.addEventListener('click', () => options.onPick(index), { signal });
@@ -146,7 +143,6 @@ export interface HighlightControlOptions {
    */
   palette: PaletteEntry[];
   activeColorIndex: number;
-  canHighlight: boolean;
   bridge: AnnotationBridge;
   onPaletteRecolor(index: number, hex: string): void;
   onActiveColorChange(index: number): void;
@@ -168,12 +164,11 @@ export function createHighlightControls(
   signal: AbortSignal,
   onToolArmed: () => void,
 ): HighlightControls {
-  const { palette, bridge, canHighlight, onActiveColorChange, onPaletteRecolor } = options;
+  const { palette, bridge, onActiveColorChange, onPaletteRecolor } = options;
   let activeIndex = options.activeColorIndex;
 
   const strip = createSwatchStrip({
     palette,
-    canHighlight,
     signal,
     onPick: (index) => {
       bridge.setHighlightColorIndex(index);

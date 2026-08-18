@@ -13,6 +13,9 @@
   "toolbarNotesTitle": { "message": "Show or hide the annotation rail." },
   "toolbarHighlight": { "message": "Highlight" },
   "toolbarHighlightTitle": { "message": "Highlight selected text. Keys 1-5 change colour." },
+  "toolbarHighlightFreeTitle": {
+    "message": "Drag across the page to draw a highlight. Keys 1-5 change colour."
+  },
   "toolbarTextBox": { "message": "Text box" },
   "toolbarTextBoxTitle": { "message": "Drag a box on the page and type inside it." },
   "toolbarSave": { "message": "Save" },
@@ -83,7 +86,7 @@
     "message": "This PDF is encrypted. totoPDF can display it but cannot save changes to it."
   },
   "capabilityNoText": {
-    "message": "This PDF has no selectable text, so highlighting is unavailable. Text boxes still work."
+    "message": "This PDF has no selectable text. Hold and drag across the page to draw a highlight."
   },
 
   "loadFailed": {

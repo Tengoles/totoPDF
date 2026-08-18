@@ -65,10 +65,17 @@ export function autosaveRig(
   };
 }
 
-/** One real content change: the hash moves, then pdf.js announces it. */
-export function editContent(host: FakeHost, doc: FakeDoc): void {
+/**
+ * One real content change: the hash moves, then pdf.js announces it, then the
+ * announcement settles. The await is not ceremony -- pdf.js dispatches its
+ * editor event from inside the operation that writes the editor to storage, so
+ * the viewer reads the storage on a microtask afterwards rather than during
+ * the event. See onEditorChangeSettled.
+ */
+export async function editContent(host: FakeHost, doc: FakeDoc): Promise<void> {
   doc.edit();
   host.emitEditingChange();
+  await Promise.resolve();
 }
 
 export async function settleDebounce(): Promise<void> {

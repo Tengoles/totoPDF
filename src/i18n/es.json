@@ -15,6 +15,9 @@
   "toolbarHighlightTitle": {
     "message": "Resalta el texto seleccionado. Las teclas 1-5 cambian el color."
   },
+  "toolbarHighlightFreeTitle": {
+    "message": "Arrastra sobre la página para dibujar un resaltado. Las teclas 1-5 cambian el color."
+  },
   "toolbarTextBox": { "message": "Cuadro de texto" },
   "toolbarTextBoxTitle": { "message": "Arrastra un cuadro sobre la página y escribe adentro." },
   "toolbarSave": { "message": "Guardar" },
@@ -85,7 +88,7 @@
     "message": "Este PDF está cifrado. totoPDF puede mostrarlo, pero no puede guardarle cambios."
   },
   "capabilityNoText": {
-    "message": "Este PDF no tiene texto seleccionable, así que no se puede resaltar. Los cuadros de texto sí funcionan."
+    "message": "Este PDF no tiene texto seleccionable. Mantén pulsado y arrastra sobre la página para dibujar un resaltado."
   },
 
   "loadFailed": {

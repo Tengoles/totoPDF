@@ -17,7 +17,7 @@ describe('autosave failure', () => {
     store.get = () => Promise.reject(new Error('IndexedDB unavailable'));
     await controller.present(loadedDoc('a'));
 
-    editContent(host, doc);
+    await editContent(host, doc);
     await settleDebounce();
 
     expect(failures).toHaveLength(1);
@@ -26,7 +26,7 @@ describe('autosave failure', () => {
     expect(controller.saveStatus.state()).toBe('unsaved');
 
     // No retry loop: further edits, and further time, add nothing.
-    editContent(host, doc);
+    await editContent(host, doc);
     await settleDebounce();
     await settleDebounce();
     expect(failures).toHaveLength(1);
@@ -39,7 +39,7 @@ describe('autosave failure', () => {
     const workingGet = store.get;
     store.get = () => Promise.reject(new Error('IndexedDB unavailable'));
     await controller.present(loadedDoc('a'));
-    editContent(host, doc);
+    await editContent(host, doc);
     await settleDebounce();
 
     store.rows.set('b', second.handle);
@@ -48,7 +48,7 @@ describe('autosave failure', () => {
     host.host.open = () => Promise.resolve(nextDoc.proxy);
     await controller.present(loadedDoc('b'));
 
-    editContent(host, nextDoc);
+    await editContent(host, nextDoc);
     await settleDebounce();
     expect(second.written).toEqual([savedBytesFor(MARKER_B)]);
   });
@@ -69,7 +69,7 @@ describe('save status', () => {
       await gate.promise;
       return store.rows.get(identity);
     };
-    editContent(host, doc);
+    await editContent(host, doc);
     // During the debounce window the edit genuinely is not in the file.
     expect(controller.saveStatus.state()).toBe('unsaved');
 
@@ -86,7 +86,7 @@ describe('save status', () => {
     const { controller, host, doc, store } = autosaveRig();
     const gate = deferred<void>();
     await controller.present(loadedDoc('a'));
-    editContent(host, doc);
+    await editContent(host, doc);
     store.get = async (identity) => {
       await gate.promise;
       return store.rows.get(identity);
@@ -111,7 +111,7 @@ describe('save status', () => {
     // stop being written to or every open would leave another one live.
     abort.abort();
     const before = seen.length;
-    editContent(host, doc);
+    await editContent(host, doc);
     await settleDebounce();
 
     expect(seen).toHaveLength(before);

@@ -51,14 +51,14 @@ describe('present', () => {
     expect(controller.capabilities()).toEqual(before);
   });
 
-  it('denies every capability while an open is in flight', async () => {
+  it('withholds saving while an open is in flight', async () => {
     const pending = deferred<PDFDocumentProxy>();
     const { controller } = controllerFor(() => pending.promise);
 
     const presenting = controller.present(loadedDoc('a'));
     expect(controller.capabilities()).toEqual({
       canSave: false,
-      canHighlight: false,
+      highlightMode: 'text',
       reasons: [],
     });
 
@@ -230,10 +230,34 @@ describe('isDirty', () => {
 
     doc.edit();
     host.emitEditingChange();
+    await Promise.resolve();
     expect(controller.isDirty()).toBe(true);
 
     await expect(controller.save()).resolves.toBe('saved');
     expect(controller.isDirty()).toBe(false);
+  });
+
+  /**
+   * pdf.js dispatches 'editingstateschanged' from inside the operation that
+   * adds an editor, before that editor has reached annotationStorage. Observed
+   * in a real Chromium session: every event a drawn highlight fired reported an
+   * empty storage, and the write landed later in the same task, so nothing
+   * fired again afterwards. Reading the hash synchronously therefore misses the
+   * edit outright and the document goes on looking clean -- no tab-close
+   * warning, no journal entry, no autosave. Highlighting a scanned page is what
+   * makes this reachable, since a drawn highlight is never auto-selected and so
+   * never gets the later event a text highlight gets for free.
+   */
+  it('sees an edit that reaches storage after the event was dispatched', async () => {
+    const doc = fakeDoc(A);
+    const { controller, host } = controllerFor(sequencedOpen(doc.proxy));
+
+    await controller.present(loadedDoc('a'));
+    host.emitEditingChange();
+    doc.edit();
+    await Promise.resolve();
+
+    expect(controller.isDirty()).toBe(true);
   });
 
   // 'editingstateschanged' also fires when an editor is merely selected. The

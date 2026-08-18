@@ -170,12 +170,6 @@ body {
   pointer-events: none;
 }
 
-/* A disabled button swallows the pointer events over it, and the right click
-   has to reach the slot underneath: recolouring is a setting, so it stays
-   available on a document that cannot be highlighted. */
-#toolbar .swatch:disabled {
-  pointer-events: none;
-}
 
 /* Minus, readout and plus read as one control rather than three buttons. */
 .zoom-controls {

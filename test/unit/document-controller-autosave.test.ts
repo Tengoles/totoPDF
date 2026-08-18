@@ -28,7 +28,7 @@ describe('autosave triggering', () => {
     const { controller, host, doc, target } = autosaveRig();
     await controller.present(loadedDoc('a'));
 
-    editContent(host, doc);
+    await editContent(host, doc);
     expect(target.written).toHaveLength(0);
 
     await settleDebounce();
@@ -39,11 +39,11 @@ describe('autosave triggering', () => {
     const { controller, host, doc, target } = autosaveRig();
     await controller.present(loadedDoc('a'));
 
-    editContent(host, doc);
+    await editContent(host, doc);
     await vi.advanceTimersByTimeAsync(1500);
-    editContent(host, doc);
+    await editContent(host, doc);
     await vi.advanceTimersByTimeAsync(1500);
-    editContent(host, doc);
+    await editContent(host, doc);
     expect(target.written).toHaveLength(0);
 
     await settleDebounce();
@@ -67,7 +67,7 @@ describe('autosave triggering', () => {
     const { controller, host, doc, target } = autosaveRig();
     await controller.present(loadedDoc('a'));
 
-    editContent(host, doc);
+    await editContent(host, doc);
     await settleDebounce();
     expect(target.written).toHaveLength(1);
 
@@ -83,7 +83,7 @@ describe('autosave silence', () => {
     const { controller, host, doc, target, picker } = autosaveRig({ storeHandle: false });
     await controller.present(loadedDoc('a'));
 
-    editContent(host, doc);
+    await editContent(host, doc);
     await settleDebounce();
 
     expect(target.written).toHaveLength(0);
@@ -95,7 +95,7 @@ describe('autosave silence', () => {
     const { controller, host, doc, target, picker } = autosaveRig({ permission: 'prompt' });
     await controller.present(loadedDoc('a'));
 
-    editContent(host, doc);
+    await editContent(host, doc);
     await settleDebounce();
 
     expect(target.written).toHaveLength(0);
@@ -108,7 +108,7 @@ describe('autosave silence', () => {
     const { controller, host, doc, store } = autosaveRig({ permission: 'prompt' });
     await controller.present(loadedDoc('a'));
 
-    editContent(host, doc);
+    await editContent(host, doc);
     await settleDebounce();
 
     // Deleting it would make the next manual save re-open the picker for a
@@ -125,7 +125,7 @@ describe('autosave silence', () => {
     const controller = createDocumentController(host.host, fakeBridge, store, fakeJournal());
 
     await controller.present(loadedDoc('a'));
-    editContent(host, doc);
+    await editContent(host, doc);
     await settleDebounce();
 
     expect(target.written).toHaveLength(0);
@@ -142,7 +142,7 @@ describe('autosave and other writes', () => {
       return store.rows.get(identity);
     };
 
-    editContent(host, doc);
+    await editContent(host, doc);
     const manual = controller.save();
     await settleDebounce();
     expect(target.written).toHaveLength(0);
@@ -166,7 +166,7 @@ describe('autosave and other writes', () => {
     store.rows.set('b', second.handle);
     await controller.present(loadedDoc('a'));
 
-    editContent(host, doc);
+    await editContent(host, doc);
     await controller.present(loadedDoc('b'));
     await settleDebounce();
 

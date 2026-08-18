@@ -155,9 +155,26 @@ export function buildRailItems(serializable: unknown): RailItem[] {
   return byPageNumber(buildEditorEntries(serializable).items);
 }
 
-function persistedKind(subtype: string | undefined): RailItem['kind'] | null {
+/**
+ * A highlight is not always a `/Highlight`. Text selection produces one, but
+ * the drag-to-draw kind -- the only kind a page with no text layer can carry
+ * -- is written by pdf.js as an `/Ink` annotation whose intent is
+ * `/InkHighlight` (verified by saving one with pdfjs-dist@6.2.108 and reading
+ * the file back through `getAnnotations()`). Matching on subtype alone
+ * therefore drops every highlight made on a scanned page the moment it is
+ * reopened.
+ *
+ * The intent, not the subtype, is what makes it ours: totoPDF has no drawing
+ * tool, so a plain `/Ink` came from another program and is not this rail's to
+ * list.
+ */
+function persistedKind(raw: Record<string, unknown>): RailItem['kind'] | null {
+  const subtype = readString(raw, 'subtype');
   if (subtype === 'Highlight') {
     return 'highlight';
+  }
+  if (subtype === 'Ink') {
+    return readString(raw, 'it') === 'InkHighlight' ? 'highlight' : null;
   }
   if (subtype === 'FreeText') {
     return 'textbox';
@@ -209,7 +226,7 @@ export function buildPersistedRailItems(pageNumber: number, annotations: unknown
     if (!isRecord(raw)) {
       continue;
     }
-    const kind = persistedKind(readString(raw, 'subtype'));
+    const kind = persistedKind(raw);
     const id = readString(raw, 'id');
     if (!kind || !id) {
       continue;

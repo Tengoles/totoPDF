@@ -1,6 +1,7 @@
 import { mergeRailItems, type RailItem } from '../core/annotation-index';
 import { renderAnnotationRail } from '../ui/annotation-rail';
 import { scanPersistedAnnotations, type PersistedScan } from './annotation-scan';
+import { onEditorChangeSettled } from './editor-change-events';
 import type { DocumentController } from './document-controller';
 import type { ViewerHost } from './viewer-host';
 
@@ -77,6 +78,6 @@ export function createAnnotationRailWiring(
     render();
   };
 
-  host.eventBus.on('editingstateschanged', refresh);
+  onEditorChangeSettled(host, refresh);
   return refresh;
 }

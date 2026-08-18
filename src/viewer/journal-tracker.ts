@@ -1,5 +1,6 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { createDebouncedRecorder, type Journal } from '../core/recovery-journal';
+import { onEditorChangeSettled } from './editor-change-events';
 import type { ViewerHost } from './viewer-host';
 
 type AnnotationStorage = PDFDocumentProxy['annotationStorage'];
@@ -57,12 +58,10 @@ export function createJournalTracker(
   let identity: string | null = null;
   let record: ((payload: string, now: number) => void) | null = null;
 
-  // 'editingstateschanged', not 'annotationeditorstateschanged': the latter is
-  // dispatched nowhere in pdfjs-dist 6.2.108, so listening for it recorded
-  // nothing at all while looking perfectly healthy. This one fires from
-  // AnnotationEditorUIManager whenever editor state actually changes -- an
-  // editor added, removed, selected, or the undo stack moving.
-  host.eventBus.on('editingstateschanged', () => {
+  // Deferred, not direct: pdf.js dispatches its editor event before the editor
+  // reaches annotationStorage, so reading the hash synchronously misses the
+  // edit that event was about. See onEditorChangeSettled.
+  onEditorChangeSettled(host, () => {
     const pdf = currentPdf();
     if (!pdf || !record) {
       return;

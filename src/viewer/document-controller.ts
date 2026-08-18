@@ -18,15 +18,17 @@ import type { ViewerHost } from './viewer-host';
 export type { SaveOutcome } from './document-save';
 
 /** Nothing is known to be restricted until a document has actually been opened and assessed. */
-const DEFAULT_CAPABILITIES: Capabilities = { canSave: true, canHighlight: true, reasons: [] };
+const DEFAULT_CAPABILITIES: Capabilities = { canSave: true, highlightMode: 'text', reasons: [] };
 
 /**
  * What capabilities() reports for as long as an open is in flight. The
  * outgoing document's assessment does not describe the incoming one, so
  * reporting it would let, say, an encrypted book inherit a plain book's
- * permission to be written.
+ * permission to be written. Only saving is withheld: highlighting is never
+ * withdrawn from a document, and there is no document here to withdraw it
+ * from -- pdf.js's editor-mode setter is a no-op until one is loaded.
  */
-const OPENING_CAPABILITIES: Capabilities = { canSave: false, canHighlight: false, reasons: [] };
+const OPENING_CAPABILITIES: Capabilities = { canSave: false, highlightMode: 'text', reasons: [] };
 
 export interface DocumentController {
   present(loaded: LoadedDocument): Promise<void>;
