@@ -78,7 +78,13 @@ test('the highlight tool is offered on a document with no text layer', async () 
   const page = await context.newPage();
   await openNoTextFixture(page);
 
-  await expect(page.getByRole('button', { name: 'Highlight' })).toBeEnabled();
+  const highlight = page.getByRole('button', { name: 'Highlight' });
+  await expect(highlight).toBeEnabled();
+  // "Highlight selected text" would be a lie on a page that has none.
+  await expect(highlight).toHaveAttribute(
+    'title',
+    'Drag across the page to draw a highlight. Keys 1-5 change colour.',
+  );
   await expect(page.locator('.banner')).toHaveText(
     'This PDF has no selectable text. Hold and drag across the page to draw a highlight.',
   );
