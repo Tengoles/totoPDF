@@ -43,7 +43,9 @@ and tell the human these three things before continuing:
   permission. Users who never click the prompt are lost. This is the single
   most expensive consequence of a release and it is invisible from the repo.
 - **Review gets slower.** Permission changes drop out of the fast lane for
-  routine updates and back into deeper scrutiny.
+  routine updates and back into deeper scrutiny. For reference, the first
+  submission — no broad host permission — took four days (2026-08-14 to
+  2026-08-18).
 - **`file:///*` currently clears the "broad host permissions" warning.**
   Confirmed on submission 2026-08-14: with `<all_urls>` the dashboard warned
   the extension might need in-depth review; with `file:///*` no warning

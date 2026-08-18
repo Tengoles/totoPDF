@@ -96,9 +96,13 @@ command above whenever you need them.
 
 ## Deploy
 
-Submitted to the Chrome Web Store, awaiting first review. `/release` runs
-this as a checklist and works out which dashboard fields need re-pasting;
-the steps below are what it does.
+Published on the Chrome Web Store. Version 1.0.0 was submitted 2026-08-14 and
+approved 2026-08-18 — four days, for a first submission with no broad host
+permission. Useful as a rough baseline; a routine update that changes no
+permissions is normally quicker, and one that adds a permission is slower.
+
+`/release` runs the steps below as a checklist and works out which dashboard
+fields need re-pasting.
 
 Publishing a new version:
 
