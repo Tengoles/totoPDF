@@ -74,6 +74,7 @@ Cómo abrir un PDF
 
 Anotar
 - Resalta texto con una paleta de cinco colores. Con la herramienta de resaltado activa, las teclas 1 a 5 cambian el color. Haz clic derecho en un color para cambiarlo por el que quieras; la paleta se recuerda entre sesiones.
+- También puedes resaltar una página escaneada. Donde no hay texto que seleccionar, mantén pulsado y arrastra sobre la línea que quieras cubrir, y totoPDF pinta el trazo.
 - Agrega un cuadro de texto en cualquier parte de una página, con su propio color y un tamaño de fuente de 6 a 96.
 - Un panel de Notas lista todos los resaltados y cuadros de texto del documento, incluidos los guardados en una sesión anterior. Haz clic en una entrada para ir a su página.
 - El panel de Páginas muestra miniaturas, con navegación entre páginas y zoom desde la barra o el teclado.
@@ -85,7 +86,7 @@ Guardar
 
 Lo que conviene saber antes de instalarlo
 - Los PDF cifrados se abren en modo lectura. Guardar uno exigiría cifrar también las anotaciones agregadas, y en lugar de devolverte un archivo que parece guardado pero está corrupto, totoPDF desactiva el guardado y explica por qué.
-- Las páginas escaneadas sin capa de texto no se pueden resaltar, porque la herramienta de resaltado se ancla al texto y ahí no hay. Los cuadros de texto sí funcionan en esas páginas. totoPDF no hace OCR.
+- Las páginas escaneadas se resaltan dibujando en lugar de seleccionando, porque no hay texto al que anclarse, y totoPDF no hace OCR. Marcas una región, no palabras: el panel de Notas lista ese resaltado sin fragmento de texto, porque no hay palabras debajo que citar.
 - Cada guardado agrega una revisión en lugar de reescribir el archivo, que es justamente lo que lo hace no destructivo, y eso significa que el archivo crece a medida que trabajas. Nada elimina las revisiones viejas.
 - Los cuadros de texto usan la única fuente que trae el visor. El color y el tamaño se pueden cambiar; la fuente no.
 
@@ -132,6 +133,7 @@ Opening a PDF
 
 Annotating
 - Highlight text with a five-colour palette. With the highlight tool armed, keys 1 to 5 switch colour. Right-click a swatch to change that colour to anything you like; the palette is remembered between sessions.
+- Highlight a scanned page too. Where there is no text to select, hold and drag along the line you want covered and totoPDF paints the stroke instead.
 - Add a text box anywhere on a page, with its own colour and a font size from 6 to 96.
 - A Notes rail lists every highlight and text box in the document, including ones saved in an earlier session. Click an entry to jump to its page.
 - A page thumbnail rail, page navigation, and zoom from the toolbar or the keyboard.
@@ -143,7 +145,7 @@ Saving
 
 Worth knowing before you install
 - Encrypted PDFs open read-only. Saving one would require encrypting the appended annotations too, and rather than hand back a file that looks saved but is corrupt, totoPDF disables saving and says why.
-- Scanned pages with no text layer cannot be highlighted, because the highlight tool anchors to text and there is none. Text boxes still work on those pages. totoPDF does not do OCR.
+- Scanned pages are highlighted by drawing rather than by selecting, because there is no text to anchor to, and totoPDF does not do OCR. You mark a region, not words: the Notes rail lists such a highlight with no text excerpt, because there are none underneath to quote.
 - Every save appends a revision rather than rewriting the file, which is what makes it non-destructive, and it means the file grows as you work. Nothing prunes old revisions.
 - Text boxes use the one font the viewer provides. Colour and size are adjustable; the font is not.
 
